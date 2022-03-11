@@ -51,10 +51,13 @@ class WindowSpace:
         # Check if this is the litter window or normal and remove
         if window.get_type() == 1:
             self.windows.remove(window)
-        else:
+        elif window.get_type() == 2:
             self.litter_windows.remove(window)
 
-        window.win.destroy()
+        print(window.get_win_obj())
+        print(self.get_n_windows())
+
+        window.get_win_obj().destroy()
 
     def get_root_window_obj(self):
         return self.root_window.get_win_obj()
