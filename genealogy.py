@@ -74,9 +74,6 @@ def breedcats(breed):
             else:
                 litterposition = 0
             family.generations[breed.parent1.generation].insert(litterposition, breed.litter.kittens)
-            # parentposition = parentindex / len(family.generations[breed.parent1.generation - 1])
-            # litterposition = int(len(family.generations[breed.parent1.generation]) * parentposition)
-            # family.generations[breed.parent1.generation][litterposition:litterposition] = breed.litter.kittens
             for i in range(0, breed.size):
                 if breed.size == 1:
                     image1 = breed.litter.kittens[0].resizedbabyimage
