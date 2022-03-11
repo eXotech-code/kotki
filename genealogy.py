@@ -2,12 +2,11 @@
 
 from tkinter import *
 from tkinter import messagebox
-from breedingforgui import Breed, get_kitten_traits
-from newcat import NewCat
-from PIL import Image, ImageTk
-import csv
+from breedingforgui import Breed
+from PIL import Image, ImageTk, ImageDraw
 from familytreedata import Family, FamilyCat
 import random
+from resize import resize
 
 family = Family()
 # root = Tk()
@@ -155,17 +154,26 @@ def breedcats(breed):
                 breed.parent1.mates.append(breed.parent2)
                 breed.parent2.mates.append(breed.parent1)
                 if breed.parent1.ifparent == 0 and breed.parent2.ifparent == 0:
-                    family.generations.append([])
-                    family.generations[0].append(breed.parent1)
-                    family.generations[0].append(breed.parent2)
+                    family.generations.append([[]])
+                    family.generations[0][0].append(breed.parent1)
+                    family.generations[0][0].append(breed.parent2)
                 else:
-                    family.generations[breed.parent1.generation - 1].append(breed.parent2)
+                    parent1indexes = family.check_cat_index(breed.parent1)
+                    index = family.generations[parent1indexes[0]][parent1indexes[1]].index(breed.parent1)
+                    family.generations[parent1indexes[0]][parent1indexes[1]].insert(index + 1, breed.parent2)
             breed.calculate_litter_size()
             breed.calculate_chances()
             breed.create_litter()
             if len(family.generations) < breed.parent1.generation + 1:
                 family.generations.append([])
-            family.generations[breed.parent1.generation].extend(breed.litter.kittens)
+            if family.check_if_litters(breed.parent1):
+                litterposition = family.determine_litter_position(breed.parent1)
+            else:
+                litterposition = 0
+            family.generations[breed.parent1.generation].insert(litterposition, breed.litter.kittens)
+            # parentposition = parentindex / len(family.generations[breed.parent1.generation - 1])
+            # litterposition = int(len(family.generations[breed.parent1.generation]) * parentposition)
+            # family.generations[breed.parent1.generation][litterposition:litterposition] = breed.litter.kittens
             for i in range(0, breed.size):
                 if breed.size == 1:
                     image1 = breed.litter.kittens[0].resizedbabyimage
@@ -241,7 +249,6 @@ def newparentnext(breednext, imglbl, txtlbl):
 
 def newparent1():
     breed.remove_parent_1()
-
     newvar1 = StringVar()
     global potentialparent1
     potentialparent1 = FamilyCat(0, 0, 0, 0, 1)
@@ -259,7 +266,6 @@ def newparent1():
 
 def newparent2():
     breed.remove_parent_2()
-
     newvar2 = StringVar()
     global potentialparent2
     potentialparent2 = FamilyCat(0, 0, 0, 0, 1)
@@ -276,30 +282,68 @@ def newparent2():
 
 
 def create_image_test():
-    size_y = 74 * (len(family.generations))
-    biggestgen = max([len(x) for x in family.generations])
-    size_x = 74 * biggestgen
-    base = Image.new("RGB", (size_x, size_y), (220, 220, 220))
-    height = 7
+    size_y = 100 * (len(family.generations))
+    biggestgen = 0
+    for gen in family.generations:
+        size = sum([len(x) for x in gen])
+        if size > biggestgen:
+            biggestgen = size
+    size_x = 100 * biggestgen
+    base = Image.new("RGBA", (size_x, size_y), (255, 255, 255, 0))
+    height = 10
+    omit = 0
     for generation in family.generations:
-        width = 69 * len(generation)
+        width = 75 * (sum([len(x) for x in generation]))
+        width += 15 * len(generation) - 1
         gaps = int((size_x - width) / 2)
-        start = gaps + 3
-        for cat in generation:
-            catimg = cat.image
-            if cat.sex == "female" and cat.ifparent == 1:
-                background = Image.new("RGBA", catimg.size, (240, 120, 190, 255))
-            elif cat.sex == "female" and cat.ifparent == 0:
-                background = Image.new("RGBA", catimg.size, (230, 170, 200, 255))
-            elif cat.sex == "male" and cat.ifparent == 1:
-                background = Image.new("RGBA", catimg.size, (130, 220, 240, 255))
-            else:
-                background = Image.new("RGBA", catimg.size, (170, 220, 230, 255))
-            background.paste(catimg, (0, 0), mask=catimg)
+        start = 3 + gaps
+        for litter in generation:
+            linestart = 0
+            lineheight = 0
+            for cat in litter:
+                if litter.index(cat) == 0:
+                    linestart = start + 32
+                    lineheight = height - 15
+                if generation == family.generations[-1]:
+                    catimg = cat.babyimage
+                    position = (19, 23)
+                else:
+                    catimg = cat.image
+                    position = (0, 0)
+                if cat.sex == "female" and cat.ifparent == 1:
+                    background = Image.new("RGBA", (64, 64), (240, 120, 190, 255))
+                elif cat.sex == "female" and cat.ifparent == 0:
+                    background = Image.new("RGBA", (64, 64), (240, 180, 215, 255))
+                elif cat.sex == "male" and cat.ifparent == 1:
+                    background = Image.new("RGBA", (64, 64), (135, 185, 240, 255))
+                else:
+                    background = Image.new("RGBA", (64, 64), (180, 210, 240, 255))
+                background.paste(catimg, position, mask=catimg)
+                base.paste(im=background, box=(start, height))
+                draw = ImageDraw.Draw(base)
+                if cat.ifparent:
+                    draw.line([(start + 32, height - 1), (start + 32, height - 15)], width=4, fill=(0, 0, 0, 255))
+                else:
+                    if not (generation == family.generations[0] and litter == generation[0] and litter.index(cat) == 0):
+                        draw.line([(start - 10, height + 32), (start - 1, height + 32)], width=4, fill=(0, 0, 0, 255))
 
-            base.paste(im=background, box=(start, height))
-            start += 69
-        height += 69
+                start += 74
+            start += 15
+            draw = ImageDraw.Draw(base)
+            parented = [x.ifparent for x in generation[-1]]
+            parented = parented[::-1]
+            for x in parented:
+                if x:
+                    break
+                else:
+                    omit += 1
+            draw.line([(linestart - 2, lineheight), (start - 56 - (74 * omit), lineheight)], width=4,
+                      fill=(0, 0, 0, 255))
+            linestart2 = ((linestart - 2) + (start - 56 - (74 * omit))) / 2
+            draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
+            omit = 0
+        height += 100
+    base = resize(base)
     base.save("tree.png")
     base.show()
 

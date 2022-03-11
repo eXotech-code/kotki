@@ -4,7 +4,50 @@ from newcat import NewCat
 class Family:
     def __init__(self):
         self.generations = []
-        self.gennumber = 0
+
+    def check_cat_index(self, cat):
+        indexes = []
+        for gen in range(len(self.generations)):
+            for litter in range(len(self.generations[gen])):
+                if cat in self.generations[gen][litter]:
+                    indexes = [gen, litter]
+        return indexes
+
+    def check_if_litters(self, parent):
+        generation = parent.generation
+        result = 0
+        if self.generations[generation] != [[]]:
+            result = 1
+        return result
+
+    def compare_cat_indexes(self, cat1, cat2):
+        result = 0
+        indexes = self.check_cat_index(cat1)
+        if cat2 in self.generations[indexes[0]][indexes[1]]:
+            index1 = self.generations[indexes[0]][indexes[1]].index(cat1)
+            index2 = self.generations[indexes[0]][indexes[1]].index(cat2)
+            if index1 < index2:
+                result = "left"
+            else:
+                result = "right"
+        return result
+
+    def determine_litter_position(self, parent):
+        position = 'start'
+        generation = self.generations[parent.generation]
+        for litter in generation:
+            if litter:
+                if litter[0].ifparent:
+                    cat2 = litter[0].dad
+                    check = self.compare_cat_indexes(parent, cat2)
+                    if check == "left":
+                        position = generation.index(litter)
+                        break
+            else:
+                position = generation.index(litter)
+        if position == 'start':
+            position = len(generation)
+        return position
 
 
 class FamilyCat(NewCat):
