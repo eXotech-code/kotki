@@ -16,10 +16,10 @@ family = Family()
 # root.configure(bg="pink")
 
 # windows = []
-# litters = []
+litters = []
 
 # breeding_windows = []
-# parentpassed = []
+parentpassed = []
 
 # Create root window and setup functions for creating and manipulating
 # other windows.
@@ -30,6 +30,9 @@ class WindowSpace:
         self.root_window = Window(self, 0)
         self.windows = []
         self.litter_windows = []
+
+    def start(self):
+        self.get_root_window_obj().mainloop()
 
     # Create a new window and add it to the list.
     # 0 is root window, 1 is normal window and 2 is litter window.
@@ -47,11 +50,14 @@ class WindowSpace:
     def close(self, window):
         # Check if this is the litter window or normal and remove
         if window.get_type() == 1:
-            windows.remove(window)
+            self.windows.remove(window)
         else:
-            litter_windows.remove(window)
+            self.litter_windows.remove(window)
 
         window.win.destroy()
+
+    def get_root_window_obj(self):
+        return self.root_window.get_win_obj()
 
     def get_n_windows(self):
         return self.windows
@@ -61,13 +67,15 @@ class WindowSpace:
 
     # Get window frame at index.
     def get_n_frame_at_i(self, i):
-        return self.windows(i).get_frame()
+        return self.windows[i].get_frame()
     def get_l_frame_at_i(self, i):
-        return self.litter_windows(i).get_frame()
+        return self.litter_windows[i].get_frame()
 
 # A window class responsible for litter windows and parent windows.
 class Window:
     def __init__(self, parent, win_type):
+        self.parent = parent
+
         # Definitions of attributes for different types of windows.
         at_lst = [
             ["Breed Cats", "pink", "600x400"], # Root window
@@ -77,14 +85,14 @@ class Window:
 
         self.ty = win_type
         self.create(*at_lst[win_type])
-        self.win.protocol("WM_DELETE_WINDOW", lambda win=self: parent.close(window))
+        self.win.protocol("WM_DELETE_WINDOW", lambda window=self: parent.close(window))
 
-    def create(self, title, color, size):
+    def create(self, title, color, size=0):
         # If this is the root window, instantiate it via Tk class.
         if self.ty == 0:
             self.win = Tk()
         else:
-            self.win = Toplevel(root)
+            self.win = Toplevel(self.parent.get_root_window_obj())
 
         self.win.title(title)
         self.win.configure(bg=color)
@@ -93,6 +101,9 @@ class Window:
 
     def get_frame(self):
         return self.win.frame()
+
+    def get_win_obj(self):
+        return self.win
 
     def get_type(self):
         return self.ty
@@ -175,13 +186,13 @@ def breedcats(breed):
                     result.save("kittens.png")
             # Create a new window and save the index in list.
             new_window_i = window_space.instantiate(2)
-            new_window = window_space.get_l_windows[new_window_i]
+            new_window = window_space.get_l_windows()[new_window_i].get_win_obj()
             # newWindow = Toplevel(root)
             # newWindow.title("Litter")
             # newWindow.configure(bg="pink")
             babies = Image.open("kittens.png")
             babies = ImageTk.PhotoImage(babies)
-            babycats = Button(newWindow, image=babies, bg="light goldenrod",
+            babycats = Button(new_window, image=babies, bg="light goldenrod",
                               command=lambda: breeding_passdata(window_space.get_l_frame_at_i(new_window_i)))
             babycats.image = babies
             babycats.grid()
@@ -190,8 +201,9 @@ def breedcats(breed):
 
 
 def breeding_passdata(frame):
+    windows = window_space.get_l_windows()
     for i in range(len(windows)):
-        if windows[i].frame() == frame:
+        if windows[i].get_frame() == frame:
             breedingnextgen(litters[i])
 
 
@@ -290,14 +302,11 @@ def create_image_test():
 
 
 def breedcats_topass(frame):
-    for i in range(len(breeding_windows)):
-        if breeding_windows[i].frame() == frame:
-            breedcats(parentpassed[i])
+    breeding_windows = window_space.get_n_windows()
 
-# On window close remove that window from the list.
-def win_close_handler(curr_win):
-    print(windows)
-#   breeding_windows.pop(window_index)
+    for i in range(len(breeding_windows)):
+        if breeding_windows[i].get_frame() == frame:
+            breedcats(parentpassed[i])
 
 def breedingnextgen(litter):
     parentfixed = random.choice(litter.kittens)
@@ -306,7 +315,7 @@ def breedingnextgen(litter):
 
 #   Those can be members of window class.
     new_window_i = window_space.instantiate(1)
-    new_window = window_space.get_n_windows()[new_window_i]
+    new_window = window_space.get_n_windows()[new_window_i].get_win_obj()
 
     img1 = parentfixed.resizedimage
     img1 = ImageTk.PhotoImage(img1)
@@ -339,18 +348,18 @@ def breedingnextgen(litter):
     B2a.grid(row=3, column=2)
 
 
-label1 = Label(root, image=tkpic1, bg="pink")
-label1a = Label(root, textvariable=var1)
-B1 = Button(root, text="set parent", command=setparent1)
-B1a = Button(root, text="new", command=newparent1)
+label1 = Label(window_space.get_root_window_obj(), image=tkpic1, bg="pink")
+label1a = Label(window_space.get_root_window_obj(), textvariable=var1)
+B1 = Button(window_space.get_root_window_obj(), text="set parent", command=setparent1)
+B1a = Button(window_space.get_root_window_obj(), text="new", command=newparent1)
 
-label2 = Label(root, image=tkpic2, bg="pink")
-label2a = Label(root, textvariable=var2)
-B2 = Button(root, text="set parent", command=setparent2)
-B2a = Button(root, text="new", command=newparent2)
+label2 = Label(window_space.get_root_window_obj(), image=tkpic2, bg="pink")
+label2a = Label(window_space.get_root_window_obj(), textvariable=var2)
+B2 = Button(window_space.get_root_window_obj(), text="set parent", command=setparent2)
+B2a = Button(window_space.get_root_window_obj(), text="new", command=newparent2)
 
-breedbutton = Button(root, text="breed", command=lambda: breedcats(breed))
-treebutton = Button(root, text="tree", command=lambda: create_image_test())
+breedbutton = Button(window_space.get_root_window_obj(), text="breed", command=lambda: breedcats(breed))
+treebutton = Button(window_space.get_root_window_obj(), text="tree", command=lambda: create_image_test())
 
 label1.grid(row=0)
 label1a.grid(row=1)
@@ -365,4 +374,4 @@ label2a.grid(row=1, column=2)
 B2.grid(row=2, column=2)
 B2a.grid(row=3, column=2)
 
-root.mainloop()
+window_space.start()
