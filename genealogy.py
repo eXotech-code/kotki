@@ -277,6 +277,35 @@ def newparent2():
     label2.image = newtkpic2
     label2a.configure(textvariable=newvar2)
 
+# Bundle litters together based on the parents of the first
+# cat in each liter.
+def bundle_litters(generation):
+    # For each new set of parents of the first cat in litter
+    # generate a new numerical mask and asign to it its set of parents.
+    # Then generate a list of masks that correspond to current place in litter
+    # of cats with same set of parents.
+    masks = [0] * len(generation)
+    mask_lookup_dict = {} # Dict filled with mask numbers and correspoding parents.
+    curr_mask_lvl = 0 # The greatest mask number already assigned.
+    for i in range(len(generation)):
+        test_cat = generation[i][0]
+        test_parents = (test_cat.mom, test_cat.dad)
+
+        # If this set of parents has a defined mask, assign it to current litter.
+        if test_parents in mask_lookup_dict:
+            masks[i] = mask_lookup_dict[test_parents]
+        else:
+            # This is a new mask.
+            curr_mask_lvl += 1
+            mask_lookup_dict[test_parents] = curr_mask_lvl
+            masks[i] = curr_mask_lvl
+
+    # Now bundle the litters together based on if they have the same mask.
+    res = [[]] * curr_mask_lvl
+    for i in range(len(masks)):
+        res[masks[i] - 1].append(generation[i])
+
+    return res
 
 def create_image_test():
     size_y = 100 * (len(family.generations))
@@ -292,53 +321,57 @@ def create_image_test():
     for generation in family.generations:
         width = 75 * (sum([len(x) for x in generation]))
         width += 15 * len(generation) - 1
+        generation_bundled = bundle_liters(generation)
+        width += 15 * len(generation_bundled) # +15 For each bundle gap.
         gaps = int((size_x - width) / 2)
         start = 3 + gaps
-        for litter in generation:
-            linestart = 0
-            lineheight = 0
-            for cat in litter:
-                if litter.index(cat) == 0:
-                    linestart = start + 32
-                    lineheight = height - 15
-                if generation == family.generations[-1]:
-                    catimg = cat.babyimage
-                    position = (19, 23)
-                else:
-                    catimg = cat.image
-                    position = (0, 0)
-                if cat.sex == "female" and cat.ifparent == 1:
-                    background = Image.new("RGBA", (64, 64), (240, 120, 190, 255))
-                elif cat.sex == "female" and cat.ifparent == 0:
-                    background = Image.new("RGBA", (64, 64), (240, 180, 215, 255))
-                elif cat.sex == "male" and cat.ifparent == 1:
-                    background = Image.new("RGBA", (64, 64), (135, 185, 240, 255))
-                else:
-                    background = Image.new("RGBA", (64, 64), (180, 210, 240, 255))
-                background.paste(catimg, position, mask=catimg)
-                base.paste(im=background, box=(start, height))
-                draw = ImageDraw.Draw(base)
-                if cat.ifparent:
-                    draw.line([(start + 32, height - 1), (start + 32, height - 15)], width=4, fill=(0, 0, 0, 255))
-                else:
-                    if not (generation == family.generations[0] and litter == generation[0] and litter.index(cat) == 0):
-                        draw.line([(start - 10, height + 32), (start - 1, height + 32)], width=4, fill=(0, 0, 0, 255))
+        for bundle in generation_bundled:
+            for litter in bundle:
+                linestart = 0
+                lineheight = 0
+                for cat in litter:
+                    if litter.index(cat) == 0:
+                        linestart = start + 32
+                        lineheight = height - 15
+                    if generation == family.generations[-1]:
+                        catimg = cat.babyimage
+                        position = (19, 23)
+                    else:
+                        catimg = cat.image
+                        position = (0, 0)
+                    if cat.sex == "female" and cat.ifparent == 1:
+                        background = Image.new("RGBA", (64, 64), (240, 120, 190, 255))
+                    elif cat.sex == "female" and cat.ifparent == 0:
+                        background = Image.new("RGBA", (64, 64), (240, 180, 215, 255))
+                    elif cat.sex == "male" and cat.ifparent == 1:
+                        background = Image.new("RGBA", (64, 64), (135, 185, 240, 255))
+                    else:
+                        background = Image.new("RGBA", (64, 64), (180, 210, 240, 255))
+                    background.paste(catimg, position, mask=catimg)
+                    base.paste(im=background, box=(start, height))
+                    draw = ImageDraw.Draw(base)
+                    if cat.ifparent:
+                        draw.line([(start + 32, height - 1), (start + 32, height - 15)], width=4, fill=(0, 0, 0, 255))
+                    else:
+                        if not (generation == family.generations[0] and litter == generation[0] and litter.index(cat) == 0):
+                            draw.line([(start - 10, height + 32), (start - 1, height + 32)], width=4, fill=(0, 0, 0, 255))
 
-                start += 74
+                    start += 74
+                start += 15
+                draw = ImageDraw.Draw(base)
+                parented = [x.ifparent for x in generation[-1]]
+                parented = parented[::-1]
+                for x in parented:
+                    if x:
+                        break
+                    else:
+                        omit += 1
+                draw.line([(linestart - 2, lineheight), (start - 56 - (74 * omit), lineheight)], width=4,
+                          fill=(0, 0, 0, 255))
+                linestart2 = ((linestart - 2) + (start - 56 - (74 * omit))) / 2
+                draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
+                omit = 0
             start += 15
-            draw = ImageDraw.Draw(base)
-            parented = [x.ifparent for x in generation[-1]]
-            parented = parented[::-1]
-            for x in parented:
-                if x:
-                    break
-                else:
-                    omit += 1
-            draw.line([(linestart - 2, lineheight), (start - 56 - (74 * omit), lineheight)], width=4,
-                      fill=(0, 0, 0, 255))
-            linestart2 = ((linestart - 2) + (start - 56 - (74 * omit))) / 2
-            draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
-            omit = 0
         height += 100
     base = resize(base)
     base.save("tree.png")
@@ -357,7 +390,6 @@ def breedingnextgen(litter):
     breednext = Breed()
     breednext.set_parent1(parentfixed)
 
-#   Those can be members of window class.
     new_window_i = window_space.instantiate(1)
     new_window = window_space.get_n_windows()[new_window_i].get_win_obj()
 

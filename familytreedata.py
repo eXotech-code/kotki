@@ -16,7 +16,7 @@ class Family:
     def check_if_litters(self, parent):
         generation = parent.generation
         result = 0
-        if self.generations[generation] != [[]]:
+        if not self.generations[generation]:
             result = 1
         return result
 
