@@ -349,7 +349,7 @@ def litter_parents(litter):
 
 
 def create_image_test():
-    size_y = 100 * (len(family.generations))
+    size_y = 150 * (len(family.generations))
     lengths = []
     for gen in family.generations:
         size = sum([len(x) for x in gen])
@@ -367,8 +367,8 @@ def create_image_test():
     height = 10
     omit = 0
     for generation in family.generations:
-        width = 75 * (sum([len(x) for x in generation]))
-        width += 15 * len(generation) - 1
+        width = 74 * (sum([len(x) for x in generation]))
+        width += 30 * (len(generation) - 1)
         generation_bundled = bundle_litters(generation)
         width += 25 * len(generation_bundled)  # +15 For each bundle gap.
         gaps = int((size_x - width) / 2)
@@ -403,10 +403,10 @@ def create_image_test():
                     else:
                         if not (generation == family.generations[0] and litter == generation[0] and litter.index(
                                 cat) == 0):
-                            draw.line([(start - 10, height + 32), (start - 1, height + 32)], width=4,
+                            draw.line([(start - 26, height + 32), (start - 1, height + 32)], width=4,
                                       fill=(0, 0, 0, 255))
 
-                    start += 74
+                    start += 90
                 start += 15
                 draw = ImageDraw.Draw(base)
                 parented = [x.ifparent for x in litter]
@@ -416,13 +416,13 @@ def create_image_test():
                         break
                     else:
                         omit += 1
-                draw.line([(linestart - 2, lineheight), (start - 56 - (74 * omit), lineheight)], width=4,
+                draw.line([(linestart - 2, lineheight), (start - 72 - (90 * omit), lineheight)], width=4,
                           fill=(0, 0, 0, 255))
-                linestart2 = ((linestart - 2) + (start - 56 - (74 * omit))) / 2
+                linestart2 = ((linestart - 2) + (start - 72 - (90 * omit))) / 2
                 draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
                 omit = 0
             start += 25
-        height += 100
+        height += 150
     base = resize(base)
     base.save("tree.png")
     base.show()
