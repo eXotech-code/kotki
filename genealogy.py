@@ -321,7 +321,7 @@ def create_image_test():
     for generation in family.generations:
         width = 75 * (sum([len(x) for x in generation]))
         width += 15 * len(generation) - 1
-        generation_bundled = bundle_liters(generation)
+        generation_bundled = bundle_litters(generation)
         width += 15 * len(generation_bundled) # +15 For each bundle gap.
         gaps = int((size_x - width) / 2)
         start = 3 + gaps
