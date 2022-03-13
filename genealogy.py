@@ -87,20 +87,22 @@ class Window:
         ]
 
         self.ty = win_type
-        self.create(*at_lst[win_type])
+        self.win = self.create(*at_lst[win_type])
         self.win.protocol("WM_DELETE_WINDOW", lambda window=self: parent.close(window))
 
     def create(self, title, color, size=0):
         # If this is the root window, instantiate it via Tk class.
         if self.ty == 0:
-            self.win = Tk()
+            win = Tk()
         else:
-            self.win = Toplevel(self.parent.get_root_window_obj())
+            win = Toplevel(self.parent.get_root_window_obj())
 
-        self.win.title(title)
-        self.win.configure(bg=color)
+        win.title(title)
+        win.configure(bg=color)
         if size:
-            self.win.geometry(size)
+            win.geometry(size)
+
+        return win
 
     def get_frame(self):
         return self.win.frame()
@@ -292,7 +294,6 @@ def newparent2():
 # cat in each liter.
 
 
-
 # LINE CALCULATIONS ----------------------
 def calculate_line_up(cat):
     start = (cat.x_pos, cat.y_pos - 33)
@@ -343,53 +344,51 @@ def calculate_connector(bundle):
     mate_middle = int((mate_start, mate_end) / 2)
     first_vertical_line = ((bundle_middle, height1), (bundle_middle, height1 - 15))
     horizontal_line = ((bundle_middle, height1 - 15), (mate_middle, height1 - 15))
-    second_vertical_line = ((mate_middle, height1-15), (mate_middle, height2))
+    second_vertical_line = ((mate_middle, height1 - 15), (mate_middle, height2))
     result = (first_vertical_line, horizontal_line, second_vertical_line)
     return result
-
-
 # ---------------------------------------
 
-class LineSpace:
-    def __init__(self, base_img):
-        self.lines = []
-        self.base_img = base_img
-        self.draw = ImageDraw.draw(base)
-        draw = ImageDraw.Draw(base).line
-
-    # Based on if if you pass mates or bundle to this function
-    # it will create lines connecting bundles or mates.
-    def make_line(self, color, parents, bundle=[]):
-        new_line = ConnectsMates(parents, color, self.draw)
-        if bundle:
-            new_line = ConnectsBundles(bundle, parents, color, self.draw)
+# class LineSpace:
+#     def __init__(self, base_img):
+#         self.lines = []
+#         self.base_img = base_img
+#         self.draw = ImageDraw.draw(base)
+#         draw = ImageDraw.Draw(base).line
+#
+#     # Based on if if you pass mates or bundle to this function
+#     # it will create lines connecting bundles or mates.
+#     def make_line(self, color, parents, bundle=[]):
+#         new_line = ConnectsMates(parents, color, self.draw)
+#         if bundle:
+#             new_line = ConnectsBundles(bundle, parents, color, self.draw)
 
 
 # Class that respresents one line. It has properties responsible for
 # values that get passed to the Pillow line drawing function.
-class Line:
-    def __init__(self, color, pill_draw):
-        self.beg = (0, 0) # (x, y)
-        self.end = (0, 0) # (x, y)
-        self.color = color # (r, g, b, a)
-        self.pill_draw = pill_draw # The draw line function from pillow
-
-    def draw(self):
-        self.pill_draw(self.beg, self.end, self.color)
-
-class ConnectsBundles(Line):
-    def __init__(self, bundle, parents, *Args, **kwargs):
-        super().__init__(*args, **kwargs)
-        coords = calc_size()
-        self.beg = coords[0]
-        self.end = coords[1]
-        self.bundle = bundle
-        self.parents = parents
-        self.draw()
-
-    def calc_size():
-        # Ada does this part.
-        print("DEBUG")
+# class Line:
+#     def __init__(self, color, pill_draw):
+#         self.beg = (0, 0) # (x, y)
+#         self.end = (0, 0) # (x, y)
+#         self.color = color # (r, g, b, a)
+#         self.pill_draw = pill_draw # The draw line function from pillow
+#
+#     def draw(self):
+#         self.pill_draw(self.beg, self.end, self.color)
+#
+# class ConnectsBundles(Line):
+#     def __init__(self, bundle, parents, *Args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         coords = calc_size()
+#         self.beg = coords[0]
+#         self.end = coords[1]
+#         self.bundle = bundle
+#         self.parents = parents
+#         self.draw()
+#
+#     def calc_size():
+#         # Ada does this part.
+#         print("DEBUG")
 
 def create_image_cats():
     family.bundle()
@@ -416,7 +415,7 @@ def create_image_cats():
         width = 64 * catnumber
         width += 30 * (catnumber - 1)
         width += 15 * (litternumber - 1)
-        generation_bundled = family.generations_bundled[family.generations.index(generation)]
+        generation_bundled = bundle_litters(generation)
         width += 25 * (len(generation_bundled) - 1)  # +15 For each bundle gap.
         gaps = int((size_x - width) / 2)
         start = gaps
