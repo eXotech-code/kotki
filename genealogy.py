@@ -10,15 +10,7 @@ from resize import resize
 from pdf import create_pdf
 
 family = Family()
-# root = Tk()
-# root.geometry("600x400")
-# root.title("Breed Cats")
-# root.configure(bg="pink")
-
-# windows = []
 litters = []
-
-# breeding_windows = []
 parentpassed = []
 
 
@@ -113,9 +105,6 @@ class Window:
     def get_type(self):
         return self.ty
 
-    # def close(self):
-    # self.win.destroy()
-
 
 window_space = WindowSpace()
 
@@ -207,16 +196,12 @@ def breedcats(breed):
             # Create a new window and save the index in list.
             new_window_i = window_space.instantiate(2)
             new_window = window_space.get_l_windows()[new_window_i].get_win_obj()
-            # newWindow = Toplevel(root)
-            # newWindow.title("Litter")
-            # newWindow.configure(bg="pink")
             babies = Image.open("kittens.png")
             babies = ImageTk.PhotoImage(babies)
             babycats = Button(new_window, image=babies, bg="light goldenrod",
                               command=lambda: breeding_passdata(window_space.get_l_frame_at_i(new_window_i)))
             babycats.image = babies
             babycats.grid()
-            # windows.append(newWindow)
             litters.append(breed.litter)
 
 
@@ -347,6 +332,8 @@ def calculate_connector(bundle):
     second_vertical_line = ((mate_middle, height1 - 15), (mate_middle, height2))
     result = (first_vertical_line, horizontal_line, second_vertical_line)
     return result
+
+
 # ---------------------------------------
 
 # class LineSpace:
@@ -368,27 +355,25 @@ def calculate_connector(bundle):
 # values that get passed to the Pillow line drawing function.
 # class Line:
 #     def __init__(self, color, pill_draw):
-#         self.beg = (0, 0) # (x, y)
-#         self.end = (0, 0) # (x, y)
-#         self.color = color # (r, g, b, a)
-#         self.pill_draw = pill_draw # The draw line function from pillow
+#         self.beg = (0, 0)  # (x, y)
+#         self.end = (0, 0)  # (x, y)
+#         self.color = color  # (r, g, b, a)
+#         self.pill_draw = pill_draw  # The draw line function from pillow
 #
 #     def draw(self):
 #         self.pill_draw(self.beg, self.end, self.color)
 #
+#
 # class ConnectsBundles(Line):
-#     def __init__(self, bundle, parents, *Args, **kwargs):
+#     def __init__(self, bundle, parents, *args, **kwargs):
 #         super().__init__(*args, **kwargs)
-#         coords = calc_size()
+#         coords = calculate_connector(bundle)
 #         self.beg = coords[0]
 #         self.end = coords[1]
 #         self.bundle = bundle
 #         self.parents = parents
 #         self.draw()
-#
-#     def calc_size():
-#         # Ada does this part.
-#         print("DEBUG")
+
 
 def create_image_cats():
     family.bundle()
@@ -421,8 +406,8 @@ def create_image_cats():
         start = gaps
         for bundle in generation_bundled:
             for litter in bundle:
-                lineheight = 0
-                linestart = 0
+                # lineheight = 0
+                # linestart = 0
                 for cat in litter:
                     cat.x_pos = start + 32
                     cat.y_pos = height + 32
@@ -445,30 +430,30 @@ def create_image_cats():
                         background = Image.new("RGBA", (64, 64), (180, 210, 240, 255))
                     background.paste(catimg, position, mask=catimg)
                     base.paste(im=background, box=(start, height))
-                    draw = ImageDraw.Draw(base)
-                    if cat.ifparent:
-                        draw.line([(start + 32, height - 1), (start + 32, height - 15)], width=4, fill=(0, 0, 0, 255))
-                    else:
-                        if not (generation == family.generations[0] and litter == generation[0] and litter.index(
-                                cat) == 0):
-                            draw.line([(start - 26, height + 32), (start - 1, height + 32)], width=4,
-                                      fill=(0, 0, 0, 255))
+                    # draw = ImageDraw.Draw(base)
+                    # if cat.ifparent:
+                    #     draw.line([(start + 32, height - 1), (start + 32, height - 15)], width=4, fill=(0, 0, 0, 255))
+                    # else:
+                    #     if not (generation == family.generations[0] and litter == generation[0] and litter.index(
+                    #             cat) == 0):
+                    #         draw.line([(start - 26, height + 32), (start - 1, height + 32)], width=4,
+                    #                   fill=(0, 0, 0, 255))
 
                     start += 94
                 start += 15
-                draw = ImageDraw.Draw(base)
-                parented = [x.ifparent for x in litter]
-                parented = parented[::-1]
-                for x in parented:
-                    if x:
-                        break
-                    else:
-                        omit += 1
-                draw.line([(linestart - 2, lineheight), (start - 72 - (90 * omit), lineheight)], width=4,
-                          fill=(0, 0, 0, 255))
-                linestart2 = ((linestart - 2) + (start - 72 - (90 * omit))) / 2
-                draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
-                omit = 0
+                # draw = ImageDraw.Draw(base)
+                # parented = [x.ifparent for x in litter]
+                # parented = parented[::-1]
+                # for x in parented:
+                #     if x:
+                #         break
+                #     else:
+                #         omit += 1
+                # draw.line([(linestart - 2, lineheight), (start - 72 - (90 * omit), lineheight)], width=4,
+                #           fill=(0, 0, 0, 255))
+                # linestart2 = ((linestart - 2) + (start - 72 - (90 * omit))) / 2
+                # draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
+                # omit = 0
             start += 25
         height += 150
     base.save("smalltree.png")
@@ -496,21 +481,26 @@ def breedingnextgen(litter):
 
     img1 = parentfixed.resizedimage
     img1 = ImageTk.PhotoImage(img1)
+    potentialparentnew1 = FamilyCat(0, 0, 0, 0, parentfixed.generation)
+    potentialparentnew1.make_cat()
+    potentialparentnew1.get_phenotype()
+    potentialparentnew1.get_my_colors()
+    potentialparentnew1.draw_me()
+
     parentfixedimage = Label(new_window, image=img1, bg="SkyBlue")
     parentfixedimage.image = img1
     var1 = StringVar()
     var1.set(parentfixed.sex)
     parentfixedsexlabel = Label(new_window, textvariable=var1)
-    tkpic2 = ImageTk.PhotoImage(potentialparentnew.resizedimage)
+    tkpic2 = ImageTk.PhotoImage(potentialparentnew1.resizedimage)
     var2 = StringVar()
-    var2.set(potentialparentnew.sex)
+    var2.set(potentialparentnew1.sex)
     label2 = Label(new_window, image=tkpic2, bg="SkyBlue")
     label2.image = tkpic2
     label2a = Label(new_window, textvariable=var2)
 
     B2 = Button(new_window, text="set parent", command=lambda: setparentnew(breednext))
     B2a = Button(new_window, text="new", command=lambda: newparentnext(breednext, label2, label2a))
-    # breeding_windows.append(newWindow2)
     parentpassed.append(breednext)
     breedbutton = Button(new_window, text="breed",
                          command=lambda: breedcats_topass(window_space.get_n_frame_at_i(new_window_i)))
