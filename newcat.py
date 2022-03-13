@@ -955,11 +955,85 @@ class NewCat:
         self.babyimage = final
         self.resizedbabyimage = resize(self.babyimage)
 
+    def make_cat_set_sex(self, sex):
+        import random
+        sex_picked = sex
+        eumelanin = ["B", "b", "b'"]
+        eumelanin_picked = []
+        phaeomelanin = ["O", "o"]
+        phaeomelanin_picked = []
+        dense = ["D", "d"]
+        dense_picked = []
+        dilutionmodifier = ["Dm", "dm", "dm", "dm", "dm", "dm"]
+        dilutionmodifier_picked = []
+        agouti = ["A", "a"]
+        agouti_picked = []
+        tabby = ["Ta", "Tm", "tb"]
+        tabby_picked = []
+        white = ["Wd", "Ws", "w", "wg"]
+        white_picked = []
+        tyrosine = ["C", "cb", "cs", "ca", "c"]
+        tyrosine_picked = []
+        furlength = ["L", "l"]
+        furlength_picked = []
+        traits = []
+        for i in range(2):
+            randomnumber = random.randint(0, 2)
+            eumelanin_picked.append(eumelanin[randomnumber])
+        if "Y" in sex_picked:
+            randomnumber = random.randint(0, 1)
+            phaeomelanin_picked.append(phaeomelanin[randomnumber])
+        else:
+            for i in range(2):
+                randomnumber = random.randint(0, 1)
+                phaeomelanin_picked.append(phaeomelanin[randomnumber])
+        for i in range(2):
+            randomnumber = random.randint(0, 1)
+            dense_picked.append(dense[randomnumber])
+        for i in range(2):
+            randomnumber = random.randint(0, 5)
+            dilutionmodifier_picked.append(dilutionmodifier[randomnumber])
+        for i in range(2):
+            randomnumber = random.randint(0, 1)
+            agouti_picked.append(agouti[randomnumber])
+        for i in range(2):
+            randomnumber = random.randint(0, 2)
+            tabby_picked.append(tabby[randomnumber])
+        for i in range(2):
+            randomnumber = random.randint(0, 3)
+            if randomnumber == 0:
+                randomnumber = random.randint(0, 3)
+            white_picked.append(white[randomnumber])
+        for i in range(2):
+            randomnumber = random.randint(0, 4)
+            tyrosine_picked.append(tyrosine[randomnumber])
+        for i in range(2):
+            randomnumber = random.randint(0, 1)
+            furlength_picked.append(furlength[randomnumber])
+        traits.append(sex_picked)
+        traits.append(eumelanin_picked)
+        traits.append(phaeomelanin_picked)
+        traits.append(dense_picked)
+        traits.append(dilutionmodifier_picked)
+        traits.append(agouti_picked)
+        traits.append(tabby_picked)
+        traits.append(white_picked)
+        traits.append(tyrosine_picked)
+        traits.append(furlength_picked)
+        self.traits = traits
+        self.sex = traits[0]
+        self.eumelanin = traits[1]
+        self.phaeomelanin = traits[2]
+        self.dense = traits[3]
+        self.dilutionmod = traits[4]
+        self.agouti = traits[5]
+        self.tabby = traits[6]
+        self.white = traits[7]
+        self.tyrosine = traits[8]
+        self.furlength = traits[9]
+
     def show_me(self):
-        from PIL import Image
         self.resizedimage.show()
 
     def show_baby(self):
-        from PIL import Image
         self.resizedbabyimage.show()
-

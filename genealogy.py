@@ -224,12 +224,12 @@ def setparentnew(breednext):
     breednext.set_parent2(potentialparentnew)
 
 
-def newparentnext(breednext, imglbl, txtlbl):
+def newparentnext(breednext, imglbl, txtlbl, parent2sex):
     breednext.remove_parent_2()
     newvar1 = StringVar()
     global potentialparentnew
     potentialparentnew = FamilyCat(0, 0, 0, 0, 1)
-    potentialparentnew.make_cat()
+    potentialparentnew.make_cat_set_sex(parent2sex)
     potentialparentnew.get_phenotype()
     potentialparentnew.get_my_colors()
     potentialparentnew.draw_me()
@@ -475,32 +475,39 @@ def breedingnextgen(litter):
     parentfixed = random.choice(litter.kittens)
     breednext = Breed()
     breednext.set_parent1(parentfixed)
+    parent2sex = []
+    if parentfixed.sex == "female":
+        parent2sex = ["X", "Y"]
+    else:
+        parent2sex = ["X", "X"]
 
     new_window_i = window_space.instantiate(1)
     new_window = window_space.get_n_windows()[new_window_i].get_win_obj()
 
     img1 = parentfixed.resizedimage
     img1 = ImageTk.PhotoImage(img1)
-    potentialparentnew1 = FamilyCat(0, 0, 0, 0, parentfixed.generation)
-    potentialparentnew1.make_cat()
-    potentialparentnew1.get_phenotype()
-    potentialparentnew1.get_my_colors()
-    potentialparentnew1.draw_me()
+    global potentialparentnew
+    potentialparentnew = FamilyCat(0, 0, 0, 0, parentfixed.generation)
+    potentialparentnew.make_cat_set_sex(parent2sex)
+    potentialparentnew.get_phenotype()
+    potentialparentnew.get_my_colors()
+    potentialparentnew.draw_me()
+    breednext.set_parent2(potentialparentnew)
 
     parentfixedimage = Label(new_window, image=img1, bg="SkyBlue")
     parentfixedimage.image = img1
     var1 = StringVar()
     var1.set(parentfixed.sex)
     parentfixedsexlabel = Label(new_window, textvariable=var1)
-    tkpic2 = ImageTk.PhotoImage(potentialparentnew1.resizedimage)
+    tkpic2 = ImageTk.PhotoImage(potentialparentnew.resizedimage)
     var2 = StringVar()
-    var2.set(potentialparentnew1.sex)
+    var2.set(potentialparentnew.sex)
     label2 = Label(new_window, image=tkpic2, bg="SkyBlue")
     label2.image = tkpic2
     label2a = Label(new_window, textvariable=var2)
 
     B2 = Button(new_window, text="set parent", command=lambda: setparentnew(breednext))
-    B2a = Button(new_window, text="new", command=lambda: newparentnext(breednext, label2, label2a))
+    B2a = Button(new_window, text="new", command=lambda: newparentnext(breednext, label2, label2a, parent2sex))
     parentpassed.append(breednext)
     breedbutton = Button(new_window, text="breed",
                          command=lambda: breedcats_topass(window_space.get_n_frame_at_i(new_window_i)))
