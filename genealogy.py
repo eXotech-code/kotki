@@ -54,9 +54,6 @@ class WindowSpace:
         elif window.get_type() == 2:
             self.litter_windows.remove(window)
 
-        print(window.get_win_obj())
-        print(self.get_n_windows())
-
         window.get_win_obj().destroy()
 
     def get_root_window_obj(self):
@@ -322,13 +319,7 @@ def bundle_litters(generation):
     # return res
     result = []
     parents = []
-    print("GGGGGG")
-    print(generation)
-    print("NNNNNN")
     for litter in generation:
-        print("@@@@")
-        print(litter)
-        print("^^^^")
         parents.append(litter_parents(litter))
     parents_unique = unique_elems(parents)
     if parents_unique == [[0, 0]]:
@@ -354,9 +345,6 @@ def unique_elems(lst):
 
 
 def litter_parents(litter):
-    print("!!")
-    print(litter)
-    print("--")
     return [litter[0].mom, litter[0].dad]
 
 
@@ -384,7 +372,7 @@ def create_image_test():
         generation_bundled = bundle_litters(generation)
         width += 25 * len(generation_bundled)  # +15 For each bundle gap.
         gaps = int((size_x - width) / 2)
-        start = 3 + gaps
+        start = gaps
         for bundle in generation_bundled:
             for litter in bundle:
                 lineheight = 0
@@ -421,7 +409,7 @@ def create_image_test():
                     start += 74
                 start += 15
                 draw = ImageDraw.Draw(base)
-                parented = [x.ifparent for x in generation[-1]]
+                parented = [x.ifparent for x in litter]
                 parented = parented[::-1]
                 for x in parented:
                     if x:
