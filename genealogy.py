@@ -148,6 +148,7 @@ var2.set(potentialparent2.sex)
 
 
 def breedcats(breed):
+    im = Image.new("RGBA", (0, 0))
     if breed.parent1 is not None and breed.parent2 is not None:
         if breed.parent1.sex == breed.parent2.sex:
             messagebox.showwarning("Warning", "These two cats cannot breed")
@@ -183,7 +184,7 @@ def breedcats(breed):
                     image1 = breed.litter.kittens[0].resizedbabyimage
                     image1.save("kittens.png")
                 else:
-                    if i == 1:
+                    if i == 0:
                         image1 = breed.litter.kittens[0].resizedbabyimage
                     else:
                         image1 = Image.open("kittens.png")
