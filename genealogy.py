@@ -337,10 +337,10 @@ def calculate_connector(bundle):
     parents = [bundle[0][0].dad, bundle[0][0].mom]
     mate_line_start, mate_line_end = calculate_line_mates(parents[0], parents[1])
     bundle_line_start, height1 = bundle_horizontal_start
-    bundle_line_end, *_ = bundle_horizontal_end
+    bundle_line_end, *rest = bundle_horizontal_end
     bundle_middle = int((bundle_line_start, bundle_line_end) / 2)
     mate_start, height2 = mate_line_start
-    mate_end, *_ = mate_line_end
+    mate_end, *rest = mate_line_end
     mate_middle = int((mate_start, mate_end) / 2)
     first_vertical_line = ((bundle_middle, height1), (bundle_middle, height1 - 15))
     horizontal_line = ((bundle_middle, height1 - 15), (mate_middle, height1 - 15))
