@@ -295,22 +295,6 @@ def calculate_line_mates(cat1, cat2):
     return result
 
 
-def calculate_bundle_horizontal_line(bundle):
-    first_cat = bundle[0][0]
-    last_litter = bundle[-1]
-    last_litter_parented = [x.ifparent for x in last_litter]
-    last_litter_parented = last_litter_parented[::-1]
-    omit = 0
-    for i in last_litter_parented:
-        if not i:
-            omit += 1
-        else:
-            break
-    last_cat = last_litter[-1 - omit]
-    start = (first_cat.x_pos, first_cat.y_pos - 48)
-    end = (last_cat.x_pos, last_cat.y_pos - 48)
-    result = (start, end)
-    return result
 
 
 def calculate_connector(bundle):
@@ -329,15 +313,11 @@ def calculate_connector(bundle):
     result = (first_vertical_line, horizontal_line, second_vertical_line)
     return result
 
-
-# ---------------------------------------
-
 class LineSpace:
     def __init__(self, base_img):
         self.lines = []
         self.base_img = base_img
-        self.draw = ImageDraw.draw(base)
-        draw = ImageDraw.Draw(base).line
+        self.draw = ImageDraw.Draw(base_img).line
 
     # Based on if if you pass mates or bundle to this function
     # it will create lines connecting bundles or mates.
@@ -345,6 +325,7 @@ class LineSpace:
         new_line = ConnectsMates(parents, color, self.draw)
         if bundle:
             new_line = ConnectsBundles(bundle, parents, color, self.draw)
+        self.lines.append(new_line)
 
 
 # Class that respresents one line. It has properties responsible for
@@ -361,15 +342,47 @@ class Line:
 
 
 class ConnectsBundles(Line):
-    def __init__(self, bundle, parents, *args, **kwargs):
+    def __init__(self, bundle, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        coords = calculate_connector(bundle)
-        self.beg = coords[0]
-        self.end = coords[1]
         self.bundle = bundle
-        self.parents = parents
+        self.beg, self.end = self.calculate_line_st_en()
         self.draw()
 
+    def calculate_line_st_en(self):
+        first_cat = self.bundle[0][0]
+        last_litter = self.bundle[-1]
+        last_litter_parented = [x.ifparent for x in last_litter]
+        last_litter_parented = last_litter_parented[::-1]
+        omit = 0
+        for i in last_litter_parented:
+            if not i:
+                omit += 1
+            else:
+                break
+        last_cat = last_litter[-1 - omit]
+        start = (first_cat.x_pos, first_cat.y_pos - 48)
+        end = (last_cat.x_pos, last_cat.y_pos - 48)
+        result = (start, end)
+        return result
+
+class ConnectsMates(Line):
+    def __init__(self, cat1, cat2, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.parent1 = cat1
+        self.parent2 = cat2
+        self.beg, self.end = self.calculate_line_st_en()
+        self.draw()
+
+    def calculate_line_st_en(self):
+        direction = family.compare_cat_indexes(self.parent1, self.parent2)
+        if direction == "left":
+            start = (self.parent2.x_pos - 32, self.parent2.y_pos)
+            end = (self.parent2.x_pos - 62, self.parent2.y_pos)
+        else:
+            start = (self.parent1.x_pos - 32, self.parent1.y_pos)
+            end = (self.parent1.x_pos - 62, self.parent1.y_pos)
+        result = (start, end)
+        return result
 
 def create_image_cats():
     family.bundle()
