@@ -20,6 +20,7 @@ litters = []
 # breeding_windows = []
 parentpassed = []
 
+
 # Create root window and setup functions for creating and manipulating
 # other windows.
 
@@ -70,8 +71,10 @@ class WindowSpace:
     # Get window frame at index.
     def get_n_frame_at_i(self, i):
         return self.windows[i].get_frame()
+
     def get_l_frame_at_i(self, i):
         return self.litter_windows[i].get_frame()
+
 
 # A window class responsible for litter windows and parent windows.
 class Window:
@@ -80,9 +83,9 @@ class Window:
 
         # Definitions of attributes for different types of windows.
         at_lst = [
-            ["Breed Cats", "pink", "600x400"], # Root window
-            ["Next Generation", "SkyBlue", "600x400"], # Parent windows (normal)
-            ["Litter", "pink"] # Litter windows
+            ["Breed Cats", "pink", "600x400"],  # Root window
+            ["Next Generation", "SkyBlue", "600x400"],  # Parent windows (normal)
+            ["Litter", "pink"]  # Litter windows
         ]
 
         self.ty = win_type
@@ -111,7 +114,8 @@ class Window:
         return self.ty
 
     # def close(self):
-        # self.win.destroy()
+    # self.win.destroy()
+
 
 window_space = WindowSpace()
 
@@ -145,6 +149,7 @@ pic2 = potentialparent2.resizedimage
 tkpic2 = ImageTk.PhotoImage(pic2)
 var2.set(potentialparent2.sex)
 
+
 def breedcats(breed):
     if breed.parent1 is not None and breed.parent2 is not None:
         if breed.parent1.sex == breed.parent2.sex:
@@ -154,9 +159,14 @@ def breedcats(breed):
                 breed.parent1.mates.append(breed.parent2)
                 breed.parent2.mates.append(breed.parent1)
                 if breed.parent1.ifparent == 0 and breed.parent2.ifparent == 0:
-                    family.generations.append([[]])
-                    family.generations[0][0].append(breed.parent1)
-                    family.generations[0][0].append(breed.parent2)
+                    if len(breed.parent1.mates) == 1 and len(breed.parent2.mates) == 1:
+                        family.generations.append([[]])
+                        family.generations[0][0].append(breed.parent1)
+                        family.generations[0][0].append(breed.parent2)
+                    elif len(breed.parent1.mates) != 1:
+                        family.generations[0][0].append(breed.parent2)
+                    else:
+                        family.generations[0][0].append(breed.parent1)
                 else:
                     parent1indexes = family.check_cat_index(breed.parent1)
                     index = family.generations[parent1indexes[0]][parent1indexes[1]].index(breed.parent1)
@@ -170,7 +180,7 @@ def breedcats(breed):
                 litterposition = family.determine_litter_position(breed.parent1)
             else:
                 litterposition = 0
-            family.generations[breed.parent1.generation].insert(litterposition, breed.litter.kittens)
+            family.generations[breed.parent1.generation].insert(litterposition + 1, breed.litter.kittens)
             for i in range(0, breed.size):
                 if breed.size == 1:
                     image1 = breed.litter.kittens[0].resizedbabyimage
@@ -277,43 +287,93 @@ def newparent2():
     label2.image = newtkpic2
     label2a.configure(textvariable=newvar2)
 
+
 # Bundle litters together based on the parents of the first
 # cat in each liter.
 def bundle_litters(generation):
-    # For each new set of parents of the first cat in litter
-    # generate a new numerical mask and asign to it its set of parents.
-    # Then generate a list of masks that correspond to current place in litter
-    # of cats with same set of parents.
-    masks = [0] * len(generation)
-    mask_lookup_dict = {} # Dict filled with mask numbers and correspoding parents.
-    curr_mask_lvl = 0 # The greatest mask number already assigned.
-    for i in range(len(generation)):
-        test_cat = generation[i][0]
-        test_parents = (test_cat.mom, test_cat.dad)
+    # # For each new set of parents of the first cat in litter
+    # # generate a new numerical mask and asign to it its set of parents.
+    # # Then generate a list of masks that correspond to current place in litter
+    # # of cats with same set of parents.
+    # masks = [0] * len(generation)
+    # mask_lookup_dict = {}  # Dict filled with mask numbers and correspoding parents.
+    # curr_mask_lvl = 0  # The greatest mask number already assigned.
+    # for i in range(len(generation)):
+    #     test_cat = generation[i][0]
+    #     test_parents = (test_cat.mom, test_cat.dad)
+    #
+    #     # If this set of parents has a defined mask, assign it to current litter.
+    #     if test_parents in mask_lookup_dict:
+    #         masks[i] = mask_lookup_dict[test_parents]
+    #     else:
+    #         # This is a new mask.
+    #         curr_mask_lvl += 1
+    #         mask_lookup_dict[test_parents] = curr_mask_lvl
+    #         masks[i] = curr_mask_lvl
+    #
+    # # Now bundle the litters together based on if they have the same mask.
+    # res = [[]] * curr_mask_lvl
+    # for i in range(len(masks)):
+    #     if masks[i]-1!=-1:
+    #         res[masks[i] - 1].append(generation[i])
+    #     print(res[masks[i]-1])
+    # print("res")
+    # print(res)
+    # return res
+    result = []
+    parents = []
+    print("GGGGGG")
+    print(generation)
+    print("NNNNNN")
+    for litter in generation:
+        print("@@@@")
+        print(litter)
+        print("^^^^")
+        parents.append(litter_parents(litter))
+    parents_unique = unique_elems(parents)
+    if parents_unique == [[0, 0]]:
+        result = [generation]
+    else:
+        for bundle in range(len(parents_unique)):
+            temp = []
+            for litter in generation:
+                if litter_parents(litter) == parents_unique[bundle]:
+                    temp.append(litter)
+            result.append(temp)
+    return result
 
-        # If this set of parents has a defined mask, assign it to current litter.
-        if test_parents in mask_lookup_dict:
-            masks[i] = mask_lookup_dict[test_parents]
-        else:
-            # This is a new mask.
-            curr_mask_lvl += 1
-            mask_lookup_dict[test_parents] = curr_mask_lvl
-            masks[i] = curr_mask_lvl
 
-    # Now bundle the litters together based on if they have the same mask.
-    res = [[]] * curr_mask_lvl
-    for i in range(len(masks)):
-        res[masks[i] - 1].append(generation[i])
+def unique_elems(lst):
+    l1 = lst
+    l2 = []
 
-    return res
+    for elem in l1:
+        if elem not in l2:
+            l2.append(elem)
+    return l2
+
+
+def litter_parents(litter):
+    print("!!")
+    print(litter)
+    print("--")
+    return [litter[0].mom, litter[0].dad]
+
 
 def create_image_test():
     size_y = 100 * (len(family.generations))
-    biggestgen = 0
+    lengths = []
     for gen in family.generations:
         size = sum([len(x) for x in gen])
-        if size > biggestgen:
-            biggestgen = size
+        lengths.append(size)
+    biggestgen = max(lengths)
+    longestgens = [x for x in family.generations if lengths[family.generations.index(x)] == biggestgen]
+    secondary_sizing = []
+    for longgen in longestgens:
+        bundled_gen = bundle_litters(longgen)
+        secondary_sizing.append(len(bundled_gen))
+    bundlesinbiggestgen = max(secondary_sizing)
+    biggestgen += int(bundlesinbiggestgen / 4)
     size_x = 100 * biggestgen
     base = Image.new("RGBA", (size_x, size_y), (255, 255, 255, 0))
     height = 10
@@ -321,14 +381,14 @@ def create_image_test():
     for generation in family.generations:
         width = 75 * (sum([len(x) for x in generation]))
         width += 15 * len(generation) - 1
-        generation_bundled = bundle_liters(generation)
-        width += 15 * len(generation_bundled) # +15 For each bundle gap.
+        generation_bundled = bundle_litters(generation)
+        width += 25 * len(generation_bundled)  # +15 For each bundle gap.
         gaps = int((size_x - width) / 2)
         start = 3 + gaps
         for bundle in generation_bundled:
             for litter in bundle:
-                linestart = 0
                 lineheight = 0
+                linestart = 0
                 for cat in litter:
                     if litter.index(cat) == 0:
                         linestart = start + 32
@@ -353,8 +413,10 @@ def create_image_test():
                     if cat.ifparent:
                         draw.line([(start + 32, height - 1), (start + 32, height - 15)], width=4, fill=(0, 0, 0, 255))
                     else:
-                        if not (generation == family.generations[0] and litter == generation[0] and litter.index(cat) == 0):
-                            draw.line([(start - 10, height + 32), (start - 1, height + 32)], width=4, fill=(0, 0, 0, 255))
+                        if not (generation == family.generations[0] and litter == generation[0] and litter.index(
+                                cat) == 0):
+                            draw.line([(start - 10, height + 32), (start - 1, height + 32)], width=4,
+                                      fill=(0, 0, 0, 255))
 
                     start += 74
                 start += 15
@@ -371,7 +433,7 @@ def create_image_test():
                 linestart2 = ((linestart - 2) + (start - 56 - (74 * omit))) / 2
                 draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
                 omit = 0
-            start += 15
+            start += 25
         height += 100
     base = resize(base)
     base.save("tree.png")
@@ -384,6 +446,7 @@ def breedcats_topass(frame):
     for i in range(len(breeding_windows)):
         if breeding_windows[i].get_frame() == frame:
             breedcats(parentpassed[i])
+
 
 def breedingnextgen(litter):
     parentfixed = random.choice(litter.kittens)
@@ -411,7 +474,8 @@ def breedingnextgen(litter):
     B2a = Button(new_window, text="new", command=lambda: newparentnext(breednext, label2, label2a))
     # breeding_windows.append(newWindow2)
     parentpassed.append(breednext)
-    breedbutton = Button(new_window, text="breed", command=lambda: breedcats_topass(window_space.get_n_frame_at_i(new_window_i)))
+    breedbutton = Button(new_window, text="breed",
+                         command=lambda: breedcats_topass(window_space.get_n_frame_at_i(new_window_i)))
 
     parentfixedimage.grid(row=0)
     parentfixedsexlabel.grid(row=1)

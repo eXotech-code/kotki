@@ -14,9 +14,8 @@ class Family:
         return indexes
 
     def check_if_litters(self, parent):
-        generation = parent.generation
         result = 0
-        if not self.generations[generation]:
+        if not self.generations[parent.generation]:
             result = 1
         return result
 
