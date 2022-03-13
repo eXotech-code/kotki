@@ -211,11 +211,11 @@ def breeding_passdata(frame):
         if windows[i].get_frame() == frame:
             breedingnextgen(litters[i])
 
-
+# Root window
 def setparent1():
     breed.set_parent1(potentialparent1)
 
-
+# Breed window
 def setparent2():
     breed.set_parent2(potentialparent2)
 
