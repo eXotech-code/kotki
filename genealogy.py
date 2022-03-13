@@ -289,35 +289,6 @@ def newparent2():
 # Bundle litters together based on the parents of the first
 # cat in each liter.
 def bundle_litters(generation):
-    # # For each new set of parents of the first cat in litter
-    # # generate a new numerical mask and asign to it its set of parents.
-    # # Then generate a list of masks that correspond to current place in litter
-    # # of cats with same set of parents.
-    # masks = [0] * len(generation)
-    # mask_lookup_dict = {}  # Dict filled with mask numbers and correspoding parents.
-    # curr_mask_lvl = 0  # The greatest mask number already assigned.
-    # for i in range(len(generation)):
-    #     test_cat = generation[i][0]
-    #     test_parents = (test_cat.mom, test_cat.dad)
-    #
-    #     # If this set of parents has a defined mask, assign it to current litter.
-    #     if test_parents in mask_lookup_dict:
-    #         masks[i] = mask_lookup_dict[test_parents]
-    #     else:
-    #         # This is a new mask.
-    #         curr_mask_lvl += 1
-    #         mask_lookup_dict[test_parents] = curr_mask_lvl
-    #         masks[i] = curr_mask_lvl
-    #
-    # # Now bundle the litters together based on if they have the same mask.
-    # res = [[]] * curr_mask_lvl
-    # for i in range(len(masks)):
-    #     if masks[i]-1!=-1:
-    #         res[masks[i] - 1].append(generation[i])
-    #     print(res[masks[i]-1])
-    # print("res")
-    # print(res)
-    # return res
     result = []
     parents = []
     for litter in generation:
@@ -326,10 +297,10 @@ def bundle_litters(generation):
     if parents_unique == [[0, 0]]:
         result = [generation]
     else:
-        for bundle in range(len(parents_unique)):
+        for bundle_num in range(len(parents_unique)):
             temp = []
             for litter in generation:
-                if litter_parents(litter) == parents_unique[bundle]:
+                if litter_parents(litter) == parents_unique[bundle_num]:
                     temp.append(litter)
             result.append(temp)
     return result
@@ -338,7 +309,6 @@ def bundle_litters(generation):
 def unique_elems(lst):
     l1 = lst
     l2 = []
-
     for elem in l1:
         if elem not in l2:
             l2.append(elem)
