@@ -127,8 +127,7 @@ class Breed:
             else:
                 self.litter.kittens[i].mom = self.parent2
                 self.litter.kittens[i].dad = self.parent1
-            self.litter.kittens[i].generation = self.parent1.generation+1
-
+            self.litter.kittens[i].generation = self.parent1.generation + 1
 
     def show_parents(self):
         return self.parent1.resizedimage, self.parent2.resizedimage
