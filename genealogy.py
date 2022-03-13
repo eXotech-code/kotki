@@ -350,6 +350,46 @@ def calculate_connector(bundle):
 
 # ---------------------------------------
 
+class LineSpace:
+    def __init__(self, base_img):
+        self.lines = []
+        self.base_img = base_img
+        self.draw = ImageDraw.draw(base)
+        draw = ImageDraw.Draw(base).line
+
+    # Based on if if you pass mates or bundle to this function
+    # it will create lines connecting bundles or mates.
+    def make_line(self, color, parents, bundle=[]):
+        new_line = ConnectsMates(parents, color, self.draw)
+        if bundle:
+            new_line = ConnectsBundles(bundle, parents, color, self.draw)
+
+
+# Class that respresents one line. It has properties responsible for
+# values that get passed to the Pillow line drawing function.
+class Line:
+    def __init__(self, color, pill_draw):
+        self.beg = (0, 0) # (x, y)
+        self.end = (0, 0) # (x, y)
+        self.color = color # (r, g, b, a)
+        self.pill_draw = pill_draw # The draw line function from pillow
+
+    def draw(self):
+        self.pill_draw(self.beg, self.end, self.color)
+
+class ConnectsBundles(Line):
+    def __init__(self, bundle, parents, *Args, **kwargs):
+        super().__init__(*args, **kwargs)
+        coords = calc_size()
+        self.beg = coords[0]
+        self.end = coords[1]
+        self.bundle = bundle
+        self.parents = parents
+        self.draw()
+
+    def calc_size():
+        # Ada does this part.
+        print("DEBUG")
 
 def create_image_cats():
     family.bundle()
