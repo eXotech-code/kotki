@@ -1,5 +1,35 @@
 from newcat import NewCat
-from genealogy import bundle_litters
+
+
+def bundle_litters(generation):
+    result = []
+    parents = []
+    for litter in generation:
+        parents.append(litter_parents(litter))
+    parents_unique = unique_elems(parents)
+    if parents_unique == [[0, 0]]:
+        result = [generation]
+    else:
+        for bundle_num in range(len(parents_unique)):
+            temp = []
+            for litter in generation:
+                if litter_parents(litter) == parents_unique[bundle_num]:
+                    temp.append(litter)
+            result.append(temp)
+    return result
+
+
+def unique_elems(lst):
+    l1 = lst
+    l2 = []
+    for elem in l1:
+        if elem not in l2:
+            l2.append(elem)
+    return l2
+
+
+def litter_parents(litter):
+    return [litter[0].mom, litter[0].dad]
 
 
 class Family:

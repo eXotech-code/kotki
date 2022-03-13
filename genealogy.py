@@ -4,7 +4,7 @@ from tkinter import *
 from tkinter import messagebox
 from breedingforgui import Breed
 from PIL import Image, ImageTk, ImageDraw
-from familytreedata import Family, FamilyCat
+from familytreedata import Family, FamilyCat, bundle_litters
 import random
 from resize import resize
 from pdf import create_pdf
@@ -290,35 +290,65 @@ def newparent2():
 
 # Bundle litters together based on the parents of the first
 # cat in each liter.
-def bundle_litters(generation):
-    result = []
-    parents = []
-    for litter in generation:
-        parents.append(litter_parents(litter))
-    parents_unique = unique_elems(parents)
-    if parents_unique == [[0, 0]]:
-        result = [generation]
-    else:
-        for bundle_num in range(len(parents_unique)):
-            temp = []
-            for litter in generation:
-                if litter_parents(litter) == parents_unique[bundle_num]:
-                    temp.append(litter)
-            result.append(temp)
+
+
+
+# LINE CALCULATIONS ----------------------
+def calculate_line_up(cat):
+    start = (cat.x_pos, cat.y_pos - 33)
+    end = (cat.x_pos, cat.y_pos - 48)
+    result = (start, end)
     return result
 
 
-def unique_elems(lst):
-    l1 = lst
-    l2 = []
-    for elem in l1:
-        if elem not in l2:
-            l2.append(elem)
-    return l2
+def calculate_line_mates(cat1, cat2):
+    direction = family.compare_cat_indexes(cat1, cat2)
+    if direction == "left":
+        start = (cat2.x_pos - 32, cat2.y_pos)
+        end = (cat2.x_pos - 62, cat2.y_pos)
+    else:
+        start = (cat1.x_pos - 32, cat1.y_pos)
+        end = (cat1.x_pos - 62, cat1.y_pos)
+    result = (start, end)
+    return result
 
 
-def litter_parents(litter):
-    return [litter[0].mom, litter[0].dad]
+def calculate_bundle_horizontal_line(bundle):
+    first_cat = bundle[0][0]
+    last_litter = bundle[-1]
+    last_litter_parented = [x.ifparent for x in last_litter]
+    last_litter_parented = last_litter_parented[::-1]
+    omit = 0
+    for i in last_litter_parented:
+        if not i:
+            omit += 1
+        else:
+            break
+    last_cat = last_litter[-1 - omit]
+    start = (first_cat.x_pos, first_cat.y_pos - 48)
+    end = (last_cat.x_pos, last_cat.y_pos - 48)
+    result = (start, end)
+    return result
+
+
+def calculate_connector(bundle):
+    bundle_horizontal_start, bundle_horizontal_end = calculate_bundle_horizontal_line(bundle)
+    parents = [bundle[0][0].dad, bundle[0][0].mom]
+    mate_line_start, mate_line_end = calculate_line_mates(parents[0], parents[1])
+    bundle_line_start, height1 = bundle_horizontal_start
+    bundle_line_end, *_ = bundle_horizontal_end
+    bundle_middle = int((bundle_line_start, bundle_line_end) / 2)
+    mate_start, height2 = mate_line_start
+    mate_end, *_ = mate_line_end
+    mate_middle = int((mate_start, mate_end) / 2)
+    first_vertical_line = ((bundle_middle, height1), (bundle_middle, height1 - 15))
+    horizontal_line = ((bundle_middle, height1 - 15), (mate_middle, height1 - 15))
+    second_vertical_line = ((mate_middle, height1-15), (mate_middle, height2))
+    result = (first_vertical_line, horizontal_line, second_vertical_line)
+    return result
+
+
+# ---------------------------------------
 
 
 def create_image_cats():
@@ -344,10 +374,10 @@ def create_image_cats():
         catnumber = (sum([len(x) for x in generation]))
         litternumber = len(generation)
         width = 64 * catnumber
-        width += 30 * (catnumber-1)
-        width += 15*(litternumber-1)
+        width += 30 * (catnumber - 1)
+        width += 15 * (litternumber - 1)
         generation_bundled = family.generations_bundled[family.generations.index(generation)]
-        width += 25 * (len(generation_bundled)-1)  # +15 For each bundle gap.
+        width += 25 * (len(generation_bundled) - 1)  # +15 For each bundle gap.
         gaps = int((size_x - width) / 2)
         start = gaps
         for bundle in generation_bundled:
