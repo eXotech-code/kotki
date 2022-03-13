@@ -7,6 +7,7 @@ from PIL import Image, ImageTk, ImageDraw
 from familytreedata import Family, FamilyCat
 import random
 from resize import resize
+from pdf import create_pdf
 
 family = Family()
 # root = Tk()
@@ -179,27 +180,28 @@ def breedcats(breed):
             else:
                 litterposition = 0
             family.generations[breed.parent1.generation].insert(litterposition + 1, breed.litter.kittens)
-            for i in range(0, breed.size):
-                if breed.size == 1:
-                    image1 = breed.litter.kittens[0].resizedbabyimage
-                    image1.save("kittens.png")
-                else:
+            if breed.size == 1:
+                image1 = breed.litter.kittens[0].resizedbabyimage
+                image1.save("kittens.png")
+            else:
+                for i in range(0, breed.size):
                     if i == 0:
                         image1 = breed.litter.kittens[0].resizedbabyimage
+                        image1.save("kittens.png")
                     else:
                         image1 = Image.open("kittens.png")
-                    image2 = breed.litter.kittens[i].resizedbabyimage
+                        image2 = breed.litter.kittens[i].resizedbabyimage
 
-                    (width1, height1) = image1.size
-                    (width2, height2) = image2.size
+                        (width1, height1) = image1.size
+                        (width2, height2) = image2.size
 
-                    result_width = width1 + width2
-                    result_height = height1
+                        result_width = width1 + width2
+                        result_height = height1
 
-                    result = Image.new('RGBA', (result_width, result_height))
-                    result.paste(im=image1, box=(0, 0))
-                    result.paste(im=image2, box=(width1, 0))
-                    result.save("kittens.png")
+                        result = Image.new('RGBA', (result_width, result_height))
+                        result.paste(im=image1, box=(0, 0))
+                        result.paste(im=image2, box=(width1, 0))
+                        result.save("kittens.png")
             # Create a new window and save the index in list.
             new_window_i = window_space.instantiate(2)
             new_window = window_space.get_l_windows()[new_window_i].get_win_obj()
@@ -319,7 +321,8 @@ def litter_parents(litter):
     return [litter[0].mom, litter[0].dad]
 
 
-def create_image_test():
+def create_image_cats():
+    family.bundle()
     size_y = 150 * (len(family.generations))
     lengths = []
     for gen in family.generations:
@@ -334,14 +337,17 @@ def create_image_test():
     bundlesinbiggestgen = max(secondary_sizing)
     biggestgen += int(bundlesinbiggestgen / 4)
     size_x = 100 * biggestgen
-    base = Image.new("RGBA", (size_x, size_y), (255, 255, 255, 0))
+    base = Image.new("RGBA", (size_x, size_y), (255, 255, 200, 255))
     height = 10
     omit = 0
     for generation in family.generations:
-        width = 74 * (sum([len(x) for x in generation]))
-        width += 30 * (len(generation) - 1)
-        generation_bundled = bundle_litters(generation)
-        width += 25 * len(generation_bundled)  # +15 For each bundle gap.
+        catnumber = (sum([len(x) for x in generation]))
+        litternumber = len(generation)
+        width = 64 * catnumber
+        width += 30 * (catnumber-1)
+        width += 15*(litternumber-1)
+        generation_bundled = family.generations_bundled[family.generations.index(generation)]
+        width += 25 * (len(generation_bundled)-1)  # +15 For each bundle gap.
         gaps = int((size_x - width) / 2)
         start = gaps
         for bundle in generation_bundled:
@@ -349,6 +355,8 @@ def create_image_test():
                 lineheight = 0
                 linestart = 0
                 for cat in litter:
+                    cat.x_pos = start + 32
+                    cat.y_pos = height + 32
                     if litter.index(cat) == 0:
                         linestart = start + 32
                         lineheight = height - 15
@@ -377,7 +385,7 @@ def create_image_test():
                             draw.line([(start - 26, height + 32), (start - 1, height + 32)], width=4,
                                       fill=(0, 0, 0, 255))
 
-                    start += 90
+                    start += 94
                 start += 15
                 draw = ImageDraw.Draw(base)
                 parented = [x.ifparent for x in litter]
@@ -394,9 +402,11 @@ def create_image_test():
                 omit = 0
             start += 25
         height += 150
+    base.save("smalltree.png")
     base = resize(base)
     base.save("tree.png")
     base.show()
+    create_pdf()
 
 
 def breedcats_topass(frame):
@@ -458,7 +468,7 @@ B2 = Button(window_space.get_root_window_obj(), text="set parent", command=setpa
 B2a = Button(window_space.get_root_window_obj(), text="new", command=newparent2)
 
 breedbutton = Button(window_space.get_root_window_obj(), text="breed", command=lambda: breedcats(breed))
-treebutton = Button(window_space.get_root_window_obj(), text="tree", command=lambda: create_image_test())
+treebutton = Button(window_space.get_root_window_obj(), text="tree", command=lambda: create_image_cats())
 
 label1.grid(row=0)
 label1a.grid(row=1)

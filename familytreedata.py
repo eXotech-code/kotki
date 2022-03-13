@@ -1,9 +1,15 @@
 from newcat import NewCat
+from genealogy import bundle_litters
 
 
 class Family:
     def __init__(self):
         self.generations = []
+        self.generations_bundled = []
+
+    def bundle(self):
+        for gen in self.generations:
+            self.generations_bundled.append(bundle_litters(gen))
 
     def check_cat_index(self, cat):
         indexes = []
@@ -54,6 +60,8 @@ class FamilyCat(NewCat):
         self.ifparent = ifparent
         self.mom = mom
         self.dad = dad
+        self.x_pos = 0
+        self.y_pos = 0
         if mate != 0:
             self.mates = [mate]
         else:
