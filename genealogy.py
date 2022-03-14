@@ -278,11 +278,6 @@ def newparent2():
 
 
 # LINE CALCULATIONS ----------------------
-def calculate_line_up(cat):
-    start = (cat.x_pos, cat.y_pos - 33)
-    end = (cat.x_pos, cat.y_pos - 48)
-    result = (start, end)
-    return result
 
 
 class LineSpace:
