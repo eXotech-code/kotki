@@ -6,6 +6,8 @@ from the same litter window the attempts to breed cats from that window will fai
 Breeding cats in other window fixes this issue for some reason.
 ### Severity
 Low
+## Status
+Fixed
 
 # Bug #2
 ## The program doesn't create new image files if there are none already in the folder
@@ -15,6 +17,8 @@ working with images, the program spits out an error saying that it cannot open a
 It should be able to make a new file if there are none already in the folder.
 ## Severity
 Medium
+## Status
+Fixed
 
 # Bug #3
 ## Lines cover each other
@@ -23,3 +27,5 @@ connecting the bundles to the parents get shadowed by each other.
 Possible fix: Move one line above the other.
 ## Severity
 Low
+## Status
+To do
