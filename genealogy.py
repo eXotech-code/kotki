@@ -160,7 +160,7 @@ def breedcats(breed):
                 else:
                     parent1indexes = family.check_cat_index(breed.parent1)
                     index = family.generations[parent1indexes[0]][parent1indexes[1]].index(breed.parent1)
-                    family.generations[parent1indexes[0]][parent1indexes[1]].insert(index + 1, breed.parent2)
+                    family.generations[parent1indexes[0]][parent1indexes[1]].insert(index, breed.parent2)
             breed.calculate_litter_size()
             breed.calculate_chances()
             breed.create_litter()
@@ -310,7 +310,6 @@ class Line:
         self.beg = beg  # (x, y)
         self.end = end  # (x, y)
         self.color = color  # (r, g, b, a)
-        print(self.color)
         self.pill_draw = None  # The draw line function from pillow
 
     def set_draw_func(self, func):
@@ -320,7 +319,8 @@ class Line:
         return self.beg, self.end
 
     def draw(self):
-        self.pill_draw(self.beg, self.end, 4, self.color)
+        print(self.color)
+        self.pill_draw((self.beg, self.end), width=4, fill=self.color)
 
 
 class ConnectsBundle(Line):
@@ -358,14 +358,17 @@ class ConnectsMates(Line):
         self.beg, self.end = self.calculate_line_st_en()
 
     def calculate_line_st_en(self):
-        direction = family.compare_cat_indexes(self.parent1, self.parent2)
-        if direction == "left":
-            start = (self.parent2.x_pos - 32, self.parent2.y_pos)
-            end = (self.parent2.x_pos - 62, self.parent2.y_pos)
+        if self.parent1 == 0 and self.parent2 == 0:
+            result = ((0, 0), (0, 0))
         else:
-            start = (self.parent1.x_pos - 32, self.parent1.y_pos)
-            end = (self.parent1.x_pos - 62, self.parent1.y_pos)
-        result = (start, end)
+            direction = family.compare_cat_indexes(self.parent1, self.parent2)
+            if direction == "left":
+                start = (self.parent2.x_pos - 32, self.parent2.y_pos)
+                end = (self.parent2.x_pos - 62, self.parent2.y_pos)
+            else:
+                start = (self.parent1.x_pos - 32, self.parent1.y_pos)
+                end = (self.parent1.x_pos - 62, self.parent1.y_pos)
+            result = (start, end)
         return result
 
 
@@ -381,7 +384,7 @@ class ParentsOffspringCn:
     def make(self):
         for coord in self.coords:
             line = Line((0, 0, 0, 255), *coord)
-            self.lines.push(line)
+            self.lines.append(line)
             # Push a line to line_space
             self.line_space.add_line(line)
 
@@ -392,7 +395,8 @@ class ConnectsAll:
         self.line_space = line_space
         # Create lines and save their coords
         self.bundle_coords = line_space.add_line(ConnectsBundle(self.bundle, (0, 0, 0, 255)))
-        self.mate_coords = line_space.add_line(ConnectsMates(self.bundle[0][0].dad, self.bundle[0][0].mom, (0, 0, 0, 255)))
+        self.mate_coords = line_space.add_line(
+            ConnectsMates(self.bundle[0][0].dad, self.bundle[0][0].mom, (0, 0, 0, 255)))
         self.gen_connecting_line()
 
     def calculate_conn_line(self):
@@ -400,10 +404,10 @@ class ConnectsAll:
         mate_line_start, mate_line_end = self.mate_coords
         bundle_line_start, height1 = bundle_horizontal_start
         bundle_line_end, *rest = bundle_horizontal_end
-        bundle_middle = int((bundle_line_start, bundle_line_end) / 2)
+        bundle_middle = int((bundle_line_start+bundle_line_end) / 2)
         mate_start, height2 = mate_line_start
         mate_end, *rest = mate_line_end
-        mate_middle = int((mate_start, mate_end) / 2)
+        mate_middle = int((mate_start+mate_end) / 2)
         first_vertical_line = ((bundle_middle, height1), (bundle_middle, height1 - 15))
         horizontal_line = ((bundle_middle, height1 - 15), (mate_middle, height1 - 15))
         second_vertical_line = ((mate_middle, height1 - 15), (mate_middle, height2))
@@ -499,6 +503,7 @@ def create_image_cats():
             ConnectsAll(line_space, bundle)
             start += 25
         height += 150
+    line_space.draw_lines()
     base.save("smalltree.png")
     base = resize(base)
     base.save("tree.png")
