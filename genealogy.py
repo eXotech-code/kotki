@@ -160,7 +160,7 @@ def breedcats(breed):
                 else:
                     parent1indexes = family.check_cat_index(breed.parent1)
                     index = family.generations[parent1indexes[0]][parent1indexes[1]].index(breed.parent1)
-                    family.generations[parent1indexes[0]][parent1indexes[1]].insert(index+1, breed.parent2)
+                    family.generations[parent1indexes[0]][parent1indexes[1]].insert(index + 1, breed.parent2)
             breed.calculate_litter_size()
             breed.calculate_chances()
             breed.create_litter()
@@ -230,7 +230,7 @@ def newparentnext(breednext, imglbl, txtlbl, parent2sex):
     breednext.remove_parent_2()
     newvar1 = StringVar()
     global potentialparentnew
-    potentialparentnew = FamilyCat(0, 0, 0, 0, 1)
+    potentialparentnew = FamilyCat(0, 0, 0, 0, breednext.parent1.generation)
     potentialparentnew.make_cat_set_sex(parent2sex)
     potentialparentnew.get_phenotype()
     potentialparentnew.get_my_colors()
@@ -278,12 +278,6 @@ def newparent2():
 
 
 # LINE CALCULATIONS ----------------------
-def calculate_line_up(cat):
-    start = (cat.x_pos, cat.y_pos - 33)
-    end = (cat.x_pos, cat.y_pos - 48)
-    result = (start, end)
-    return result
-
 
 class LineSpace:
     def __init__(self, base_img):
@@ -344,7 +338,7 @@ class ConnectsBundle(Line):
                 else:
                     break
             last_cat = last_litter[-1 - omit]
-            start = (first_cat.x_pos, first_cat.y_pos - 48)
+            start = (first_cat.x_pos - 3, first_cat.y_pos - 48)
             end = (last_cat.x_pos, last_cat.y_pos - 48)
             result = (start, end)
         return result
@@ -356,17 +350,22 @@ class ConnectsMates(Line):
         self.parent1 = cat1
         self.parent2 = cat2
         self.beg, self.end = self.calculate_line_st_en()
+        self.type = ""
 
     def calculate_line_st_en(self):
         if self.parent1 == 0 and self.parent2 == 0:
-            result = ((0, 0), (0, 0))
+            result = ((-10, 0), (-10, 0))
         else:
+            if abs(self.parent2.x_pos - self.parent1.x_pos) > 94:
+                self.type = "dotted"
+            else:
+                self.type = "solid"
             direction = family.compare_cat_indexes(self.parent1, self.parent2)
             if direction == "left":
-                start = (self.parent2.x_pos - 32, self.parent2.y_pos)
+                start = (self.parent2.x_pos - 33, self.parent2.y_pos)
                 end = (self.parent2.x_pos - 62, self.parent2.y_pos)
             else:
-                start = (self.parent1.x_pos - 32, self.parent1.y_pos)
+                start = (self.parent1.x_pos - 33, self.parent1.y_pos)
                 end = (self.parent1.x_pos - 62, self.parent1.y_pos)
             result = (start, end)
         return result
@@ -405,16 +404,21 @@ class ConnectsAll:
         mate_line_start, mate_line_end = self.mate_coords
         bundle_line_start, height1 = bundle_horizontal_start
         bundle_line_end, *rest = bundle_horizontal_end
-        bundle_middle = int((bundle_line_start+bundle_line_end) / 2)
+        bundle_middle = int((bundle_line_start + bundle_line_end) / 2) + 1
         mate_start, height2 = mate_line_start
         mate_end, *rest = mate_line_end
-        mate_middle = int((mate_start+mate_end) / 2)
-        heighthorizontal = height1-15*(self.index+1)
-        if heighthorizontal<height2+30:
-            heighthorizontal = height1-15
+        mate_middle = int((mate_start + mate_end) / 2)
+        heighthorizontal = height1 - 15 * (self.index + 1)
+        if heighthorizontal < height2 + 30:
+            heighthorizontal = height1 - 15
         first_vertical_line = ((bundle_middle, height1), (bundle_middle, heighthorizontal))
-        horizontal_line = ((bundle_middle, heighthorizontal), (mate_middle, heighthorizontal))
         second_vertical_line = ((mate_middle, heighthorizontal), (mate_middle, height2))
+        if bundle_middle == mate_middle:
+            horizontal_line = ((bundle_middle, heighthorizontal), (mate_middle, heighthorizontal))
+        elif bundle_middle < mate_middle:
+            horizontal_line = ((bundle_middle - 2, heighthorizontal), (mate_middle + 1, heighthorizontal))
+        else:
+            horizontal_line = ((bundle_middle + 1, heighthorizontal), (mate_middle - 2, heighthorizontal))
         result = (first_vertical_line, horizontal_line, second_vertical_line)
         return result
 
@@ -482,7 +486,7 @@ def create_image_cats():
                     base.paste(im=background, box=(start, height))
                     draw = ImageDraw.Draw(base)
                     if cat.ifparent:
-                        draw.line([(start + 32, height - 1), (start + 32, height - 15)], width=4, fill=(0, 0, 0, 255))
+                        draw.line([(start + 31, height - 1), (start + 31, height - 15)], width=4, fill=(0, 0, 0, 255))
                     # else:
                     #     if not (generation == family.generations[0] and litter == generation[0] and litter.index(
                     #             cat) == 0):
