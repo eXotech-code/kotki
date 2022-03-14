@@ -310,6 +310,7 @@ class Line:
         self.beg = beg  # (x, y)
         self.end = end  # (x, y)
         self.color = color  # (r, g, b, a)
+        print(self.color)
         self.pill_draw = None  # The draw line function from pillow
 
     def set_draw_func(self, func):
@@ -391,8 +392,7 @@ class ConnectsAll:
         self.line_space = line_space
         # Create lines and save their coords
         self.bundle_coords = line_space.add_line(ConnectsBundle(self.bundle, (0, 0, 0, 255)))
-        self.mate_coords = line_space.add_line(ConnectsMates(self.bundle[0][0].dad, self.bundle[0][0].mom),
-                                               (0, 0, 0, 255))
+        self.mate_coords = line_space.add_line(ConnectsMates(self.bundle[0][0].dad, self.bundle[0][0].mom, (0, 0, 0, 255)))
         self.gen_connecting_line()
 
     def calculate_conn_line(self):
