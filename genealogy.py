@@ -319,7 +319,7 @@ class Line:
         return self.beg, self.end
 
     def draw(self):
-        self.pill_draw(self.beg, self.end, self.color)
+        self.pill_draw(self.beg, self.end, 4, self.color)
 
 
 class ConnectsBundle(Line):
