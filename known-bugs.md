@@ -15,3 +15,11 @@ working with images, the program spits out an error saying that it cannot open a
 It should be able to make a new file if there are none already in the folder.
 ## Severity
 Medium
+
+# Bug #3
+## Lines cover each other
+If there are two bundles coming from one set of parents, the lines
+connecting the bundles to the parents get shadowed by each other.
+Possible fix: Move one line above the other.
+## Severity
+Low
