@@ -300,10 +300,9 @@ class LineSpace:
 # Class that respresents one line. It has properties responsible for
 # values that get passed to the Pillow line drawing function.
 class Line:
-    def __init__(self, color, beg=(0, 0), end=(0, 0)):
+    def __init__(self, beg=(0, 0), end=(0, 0)):
         self.beg = beg  # (x, y)
         self.end = end  # (x, y)
-        self.color = color  # (r, g, b, a)
         self.pill_draw = None  # The draw line function from pillow
 
     def set_draw_func(self, func):
@@ -313,8 +312,25 @@ class Line:
         return self.beg, self.end
 
     def draw(self):
-        print(self.color)
-        self.pill_draw((self.beg, self.end), width=4, fill=self.color)
+        self.pill_draw((self.beg, self.end), width=4, fill=(0, 0, 0, 255))
+
+
+# Makes a composite of three lines that together connect
+# parents to a bundle.
+class ComplexLine:
+    def __init__(self, line_space, coords):
+        self.line_space = line_space
+        self.coords = coords
+        self.lines = []
+        self.make()
+
+    def make(self):
+        for coord in self.coords:
+            print(*coord)
+            line = Line(*coord)
+            self.lines.append(line)
+            # Push a line to line_space
+            self.line_space.add_line(line)
 
 
 class ConnectsBundle(Line):
@@ -343,14 +359,51 @@ class ConnectsBundle(Line):
             result = (start, end)
         return result
 
+class MatesLine:
+    def __init__(self, line_space, bundle, beg, end):
+        self.line_space = line_space
+        self.parent1 = bundle[0][0].dad
+        self.parent2 = bundle[0][0].mom
+        self.beg = beg
+        self.end = end
 
-class ConnectsMates(Line):
-    def __init__(self, cat1, cat2, *args, **kwargs):
+class MatesSolidLine(MatesLine):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parent1 = cat1
-        self.parent2 = cat2
-        self.beg, self.end = self.calculate_line_st_en()
+
+    def make(self):
+        self.line_space.add(Line(self.beg, self.end))
+
+class MatesDashedLine(MatesLine):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(self.line_space)
+        self.make()
+
+    def generate_coords(self):
+        # Calculate the size of line based on coords.
+        line_len = self.end[0] - self.beg[0]
+        # Calculate the size of one section.
+        sec_len = int((line_len / 4) - 5)
+        # Generate a list of coords.
+        coords = [((self.beg[0]+x*sec_len+x*5, self.beg[1]),(self.beg[0]+(x+1)*sec_len+x*5, self.beg[1])) for x in range(4)]
+        return coords
+
+
+    def make(self):
+        print(self.generate_coords())
+        ComplexLine(self.line_space, self.generate_coords())
+
+
+class ConnectsMates:
+    def __init__(self, line_space, bundle):
+        self.line_space = line_space
+        self.bundle = bundle
+        parents = self.bundle[0][0]
+        self.parent1 = parents.dad
+        self.parent2 = parents.mom
         self.type = ""
+        self.coords = self.calculate_line_st_en()
 
     def calculate_line_st_en(self):
         if self.parent1 == 0 and self.parent2 == 0:
@@ -370,23 +423,16 @@ class ConnectsMates(Line):
             result = (start, end)
         return result
 
-
-# Makes a composite of three lines that together connect
-# parents to a bundle.
-class ParentsOffspringCn:
-    def __init__(self, line_space, coords):
-        self.line_space = line_space
-        self.coords = coords
-        self.lines = []
-        self.make()
-
     def make(self):
-        for coord in self.coords:
-            line = Line((0, 0, 0, 255), *coord)
-            self.lines.append(line)
-            # Push a line to line_space
-            self.line_space.add_line(line)
+        if self.type == "dotted":
+            MatesDashedLine(self.line_space, self.bundle, *self.coords)
+        else:
+            MatesSolidLine(self.line_space, self.bundle, *self.coords)
 
+        # This has to be returned because the calculating function in
+        # ConnectsAll depends on the properties of this object.
+        # Maybe will change later.
+        return Line(*self.coords)
 
 class ConnectsAll:
     def __init__(self, line_space, bundle, bundleindex):
@@ -394,9 +440,11 @@ class ConnectsAll:
         self.index = bundleindex
         self.line_space = line_space
         # Create lines and save their coords
-        self.bundle_coords = line_space.add_line(ConnectsBundle(self.bundle, (0, 0, 0, 255)))
-        self.mate_coords = line_space.add_line(
-            ConnectsMates(self.bundle[0][0].dad, self.bundle[0][0].mom, (0, 0, 0, 255)))
+        self.bundle_coords = self.line_space.add_line(ConnectsBundle(self.bundle))
+        # As ConnectsMates needs LineSpace  to function properly
+        # it has to be instatioated here.
+        mate_line = ConnectsMates(self.line_space, self.bundle)
+        self.mate_coords = line_space.add_line(mate_line.make())
         self.gen_connecting_line()
 
     def calculate_conn_line(self):
@@ -424,7 +472,7 @@ class ConnectsAll:
 
     def gen_connecting_line(self):
         coords = self.calculate_conn_line()
-        connecting_line = ParentsOffspringCn(self.line_space, coords)
+        connecting_line = ComplexLine(self.line_space, coords)
         connecting_line.make()
 
 

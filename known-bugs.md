@@ -29,3 +29,12 @@ Possible fix: Move one line above the other.
 Low
 ## Status
 To do
+
+# Bug #4
+## The breeding window pulls random cats from other windows
+1. Breed cats.
+2. In new breeding window breed cats.
+3. Breed again from new window.
+4. Click the first litter window.
+5. In the window that opens there will be a cat that is a copy of one of the parents in
+   the first breeding window.
