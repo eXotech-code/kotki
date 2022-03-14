@@ -211,9 +211,11 @@ def breeding_passdata(frame):
         if windows[i].get_frame() == frame:
             breedingnextgen(litters[i])
 
+
 # Root window
 def setparent1():
     breed.set_parent1(potentialparent1)
+
 
 # Breed window
 def setparent2():
@@ -283,7 +285,6 @@ def calculate_line_up(cat):
     return result
 
 
-
 class LineSpace:
     def __init__(self, base_img):
         self.lines = []
@@ -295,9 +296,9 @@ class LineSpace:
     def add_line(self, new_line):
         new_line.set_draw_func(self.draw)
         self.lines.append(new_line)
-        return new_line.get_coords() # This is used by ConnectsAll class.
+        return new_line.get_coords()  # This is used by ConnectsAll class.
 
-    def draw_lines():
+    def draw_lines(self):
         for line in self.lines:
             line.draw()
 
@@ -305,7 +306,7 @@ class LineSpace:
 # Class that respresents one line. It has properties responsible for
 # values that get passed to the Pillow line drawing function.
 class Line:
-    def __init__(self, color, beg=(0,0), end=(0,0)):
+    def __init__(self, color, beg=(0, 0), end=(0, 0)):
         self.beg = beg  # (x, y)
         self.end = end  # (x, y)
         self.color = color  # (r, g, b, a)
@@ -315,7 +316,7 @@ class Line:
         self.pill_draw = func
 
     def get_coords(self):
-        return (self.beg, self.end)
+        return self.beg, self.end
 
     def draw(self):
         self.pill_draw(self.beg, self.end, self.color)
@@ -328,21 +329,25 @@ class ConnectsBundle(Line):
         self.beg, self.end = self.calculate_line_st_en()
 
     def calculate_line_st_en(self):
-        first_cat = self.bundle[0][0]
-        last_litter = self.bundle[-1]
-        last_litter_parented = [x.ifparent for x in last_litter]
-        last_litter_parented = last_litter_parented[::-1]
-        omit = 0
-        for i in last_litter_parented:
-            if not i:
-                omit += 1
-            else:
-                break
-        last_cat = last_litter[-1 - omit]
-        start = (first_cat.x_pos, first_cat.y_pos - 48)
-        end = (last_cat.x_pos, last_cat.y_pos - 48)
-        result = (start, end)
+        if self.bundle[0][0].generation == 1:
+            result = ((0, 0), (0, 0))
+        else:
+            first_cat = self.bundle[0][0]
+            last_litter = self.bundle[-1]
+            last_litter_parented = [x.ifparent for x in last_litter]
+            last_litter_parented = last_litter_parented[::-1]
+            omit = 0
+            for i in last_litter_parented:
+                if not i:
+                    omit += 1
+                else:
+                    break
+            last_cat = last_litter[-1 - omit]
+            start = (first_cat.x_pos, first_cat.y_pos - 48)
+            end = (last_cat.x_pos, last_cat.y_pos - 48)
+            result = (start, end)
         return result
+
 
 class ConnectsMates(Line):
     def __init__(self, cat1, cat2, *args, **kwargs):
@@ -362,6 +367,7 @@ class ConnectsMates(Line):
         result = (start, end)
         return result
 
+
 # Makes a composite of three lines that together connect
 # parents to a bundle.
 class ParentsOffspringCn:
@@ -378,19 +384,16 @@ class ParentsOffspringCn:
             # Push a line to line_space
             self.line_space.add_line(line)
 
+
 class ConnectsAll:
     def __init__(self, line_space, bundle):
         self.bundle = bundle
         self.line_space = line_space
         # Create lines and save their coords
         self.bundle_coords = line_space.add_line(ConnectsBundle(self.bundle, (0, 0, 0, 255)))
-        self.mate_coords = line_space.add_line(ConnectsMates(self.bundle[0][0].dad, self.bundle[0][0].mom), (0, 0, 0, 255))
+        self.mate_coords = line_space.add_line(ConnectsMates(self.bundle[0][0].dad, self.bundle[0][0].mom),
+                                               (0, 0, 0, 255))
         self.gen_connecting_line()
-
-    def gen_connecting_line(self):
-        coords = calculate_conn_line()
-        connecting_line = ParentsOffspringCn(self.line_space, coords)
-        connecting_line.make()
 
     def calculate_conn_line(self):
         bundle_horizontal_start, bundle_horizontal_end = self.bundle_coords
@@ -406,6 +409,12 @@ class ConnectsAll:
         second_vertical_line = ((mate_middle, height1 - 15), (mate_middle, height2))
         result = (first_vertical_line, horizontal_line, second_vertical_line)
         return result
+
+    def gen_connecting_line(self):
+        coords = self.calculate_conn_line()
+        connecting_line = ParentsOffspringCn(self.line_space, coords)
+        connecting_line.make()
+
 
 def create_image_cats():
     family.bundle()
