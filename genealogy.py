@@ -160,7 +160,7 @@ def breedcats(breed):
                 else:
                     parent1indexes = family.check_cat_index(breed.parent1)
                     index = family.generations[parent1indexes[0]][parent1indexes[1]].index(breed.parent1)
-                    family.generations[parent1indexes[0]][parent1indexes[1]].insert(index, breed.parent2)
+                    family.generations[parent1indexes[0]][parent1indexes[1]].insert(index+1, breed.parent2)
             breed.calculate_litter_size()
             breed.calculate_chances()
             breed.create_litter()
@@ -170,7 +170,7 @@ def breedcats(breed):
                 litterposition = family.determine_litter_position(breed.parent1)
             else:
                 litterposition = 0
-            family.generations[breed.parent1.generation].insert(litterposition + 1, breed.litter.kittens)
+            family.generations[breed.parent1.generation].insert(litterposition, breed.litter.kittens)
             if breed.size == 1:
                 image1 = breed.litter.kittens[0].resizedbabyimage
                 image1.save("kittens.png")
@@ -390,8 +390,9 @@ class ParentsOffspringCn:
 
 
 class ConnectsAll:
-    def __init__(self, line_space, bundle):
+    def __init__(self, line_space, bundle, bundleindex):
         self.bundle = bundle
+        self.index = bundleindex
         self.line_space = line_space
         # Create lines and save their coords
         self.bundle_coords = line_space.add_line(ConnectsBundle(self.bundle, (0, 0, 0, 255)))
@@ -408,9 +409,12 @@ class ConnectsAll:
         mate_start, height2 = mate_line_start
         mate_end, *rest = mate_line_end
         mate_middle = int((mate_start+mate_end) / 2)
-        first_vertical_line = ((bundle_middle, height1), (bundle_middle, height1 - 15))
-        horizontal_line = ((bundle_middle, height1 - 15), (mate_middle, height1 - 15))
-        second_vertical_line = ((mate_middle, height1 - 15), (mate_middle, height2))
+        heighthorizontal = height1-15*(self.index+1)
+        if heighthorizontal<height2+30:
+            heighthorizontal = height1-15
+        first_vertical_line = ((bundle_middle, height1), (bundle_middle, heighthorizontal))
+        horizontal_line = ((bundle_middle, heighthorizontal), (mate_middle, heighthorizontal))
+        second_vertical_line = ((mate_middle, heighthorizontal), (mate_middle, height2))
         result = (first_vertical_line, horizontal_line, second_vertical_line)
         return result
 
@@ -500,7 +504,8 @@ def create_image_cats():
                 # linestart2 = ((linestart - 2) + (start - 72 - (90 * omit))) / 2
                 # draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
                 # omit = 0
-            ConnectsAll(line_space, bundle)
+            bundleindex = generation_bundled.index(bundle)
+            ConnectsAll(line_space, bundle, bundleindex)
             start += 25
         height += 150
     line_space.draw_lines()
