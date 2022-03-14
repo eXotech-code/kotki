@@ -283,35 +283,6 @@ def calculate_line_up(cat):
     return result
 
 
-def calculate_line_mates(cat1, cat2):
-    direction = family.compare_cat_indexes(cat1, cat2)
-    if direction == "left":
-        start = (cat2.x_pos - 32, cat2.y_pos)
-        end = (cat2.x_pos - 62, cat2.y_pos)
-    else:
-        start = (cat1.x_pos - 32, cat1.y_pos)
-        end = (cat1.x_pos - 62, cat1.y_pos)
-    result = (start, end)
-    return result
-
-
-
-
-def calculate_connector(bundle):
-    bundle_horizontal_start, bundle_horizontal_end = calculate_bundle_horizontal_line(bundle)
-    parents = [bundle[0][0].dad, bundle[0][0].mom]
-    mate_line_start, mate_line_end = calculate_line_mates(parents[0], parents[1])
-    bundle_line_start, height1 = bundle_horizontal_start
-    bundle_line_end, *rest = bundle_horizontal_end
-    bundle_middle = int((bundle_line_start, bundle_line_end) / 2)
-    mate_start, height2 = mate_line_start
-    mate_end, *rest = mate_line_end
-    mate_middle = int((mate_start, mate_end) / 2)
-    first_vertical_line = ((bundle_middle, height1), (bundle_middle, height1 - 15))
-    horizontal_line = ((bundle_middle, height1 - 15), (mate_middle, height1 - 15))
-    second_vertical_line = ((mate_middle, height1 - 15), (mate_middle, height2))
-    result = (first_vertical_line, horizontal_line, second_vertical_line)
-    return result
 
 class LineSpace:
     def __init__(self, base_img):
@@ -321,32 +292,40 @@ class LineSpace:
 
     # Based on if if you pass mates or bundle to this function
     # it will create lines connecting bundles or mates.
-    def make_line(self, color, parents, bundle=[]):
-        new_line = ConnectsMates(parents, color, self.draw)
-        if bundle:
-            new_line = ConnectsBundles(bundle, parents, color, self.draw)
+    def add_line(self, new_line):
+        new_line.set_draw_func(self.draw)
         self.lines.append(new_line)
+        return new_line.get_coords() # This is used by ConnectsAll class.
+
+    def draw_lines():
+        for line in self.lines:
+            line.draw()
 
 
 # Class that respresents one line. It has properties responsible for
 # values that get passed to the Pillow line drawing function.
 class Line:
-    def __init__(self, color, pill_draw):
-        self.beg = (0, 0)  # (x, y)
-        self.end = (0, 0)  # (x, y)
+    def __init__(self, color, beg=(0,0), end=(0,0)):
+        self.beg = beg  # (x, y)
+        self.end = end  # (x, y)
         self.color = color  # (r, g, b, a)
-        self.pill_draw = pill_draw  # The draw line function from pillow
+        self.pill_draw = None  # The draw line function from pillow
+
+    def set_draw_func(self, func):
+        self.pill_draw = func
+
+    def get_coords(self):
+        return (self.beg, self.end)
 
     def draw(self):
         self.pill_draw(self.beg, self.end, self.color)
 
 
-class ConnectsBundles(Line):
+class ConnectsBundle(Line):
     def __init__(self, bundle, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bundle = bundle
         self.beg, self.end = self.calculate_line_st_en()
-        self.draw()
 
     def calculate_line_st_en(self):
         first_cat = self.bundle[0][0]
@@ -371,7 +350,6 @@ class ConnectsMates(Line):
         self.parent1 = cat1
         self.parent2 = cat2
         self.beg, self.end = self.calculate_line_st_en()
-        self.draw()
 
     def calculate_line_st_en(self):
         direction = family.compare_cat_indexes(self.parent1, self.parent2)
@@ -382,6 +360,51 @@ class ConnectsMates(Line):
             start = (self.parent1.x_pos - 32, self.parent1.y_pos)
             end = (self.parent1.x_pos - 62, self.parent1.y_pos)
         result = (start, end)
+        return result
+
+# Makes a composite of three lines that together connect
+# parents to a bundle.
+class ParentsOffspringCn:
+    def __init__(self, line_space, coords):
+        self.line_space = line_space
+        self.coords = coords
+        self.lines = []
+        self.make()
+
+    def make(self):
+        for coord in self.coords:
+            line = Line((0, 0, 0, 255), *coord)
+            self.lines.push(line)
+            # Push a line to line_space
+            self.line_space.add_line(line)
+
+class ConnectsAll:
+    def __init__(self, line_space, bundle):
+        self.bundle = bundle
+        self.line_space = line_space
+        # Create lines and save their coords
+        self.bundle_coords = line_space.add_line(ConnectsBundle(self.bundle, (0, 0, 0, 255)))
+        self.mate_coords = line_space.add_line(ConnectsMates(self.bundle[0][0].dad, self.bundle[0][0].mom), (0, 0, 0, 255))
+        self.gen_connecting_line()
+
+    def gen_connecting_line(self):
+        coords = calculate_conn_line()
+        connecting_line = ParentsOffspringCn(self.line_space, coords)
+        connecting_line.make()
+
+    def calculate_conn_line(self):
+        bundle_horizontal_start, bundle_horizontal_end = self.bundle_coords
+        mate_line_start, mate_line_end = self.mate_coords
+        bundle_line_start, height1 = bundle_horizontal_start
+        bundle_line_end, *rest = bundle_horizontal_end
+        bundle_middle = int((bundle_line_start, bundle_line_end) / 2)
+        mate_start, height2 = mate_line_start
+        mate_end, *rest = mate_line_end
+        mate_middle = int((mate_start, mate_end) / 2)
+        first_vertical_line = ((bundle_middle, height1), (bundle_middle, height1 - 15))
+        horizontal_line = ((bundle_middle, height1 - 15), (mate_middle, height1 - 15))
+        second_vertical_line = ((mate_middle, height1 - 15), (mate_middle, height2))
+        result = (first_vertical_line, horizontal_line, second_vertical_line)
         return result
 
 def create_image_cats():
@@ -401,6 +424,7 @@ def create_image_cats():
     biggestgen += int(bundlesinbiggestgen / 4)
     size_x = 100 * biggestgen
     base = Image.new("RGBA", (size_x, size_y), (255, 255, 200, 255))
+    line_space = LineSpace(base)
     height = 10
     omit = 0
     for generation in family.generations:
@@ -463,6 +487,7 @@ def create_image_cats():
                 # linestart2 = ((linestart - 2) + (start - 72 - (90 * omit))) / 2
                 # draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
                 # omit = 0
+            ConnectsAll(line_space, bundle)
             start += 25
         height += 150
     base.save("smalltree.png")
