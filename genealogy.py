@@ -160,7 +160,7 @@ def breedcats(breed):
                 else:
                     parent1indexes = family.check_cat_index(breed.parent1)
                     index = family.generations[parent1indexes[0]][parent1indexes[1]].index(breed.parent1)
-                    family.generations[parent1indexes[0]][parent1indexes[1]].insert(index+1, breed.parent2)
+                    family.generations[parent1indexes[0]][parent1indexes[1]].insert(index + 1, breed.parent2)
             breed.calculate_litter_size()
             breed.calculate_chances()
             breed.create_litter()
@@ -230,7 +230,7 @@ def newparentnext(breednext, imglbl, txtlbl, parent2sex):
     breednext.remove_parent_2()
     newvar1 = StringVar()
     global potentialparentnew
-    potentialparentnew = FamilyCat(0, 0, 0, 0, 1)
+    potentialparentnew = FamilyCat(0, 0, 0, 0, breednext.parent1.generation)
     potentialparentnew.make_cat_set_sex(parent2sex)
     potentialparentnew.get_phenotype()
     potentialparentnew.get_my_colors()
@@ -279,7 +279,6 @@ def newparent2():
 
 # LINE CALCULATIONS ----------------------
 
-
 class LineSpace:
     def __init__(self, base_img):
         self.lines = []
@@ -301,11 +300,12 @@ class LineSpace:
 # Class that respresents one line. It has properties responsible for
 # values that get passed to the Pillow line drawing function.
 class Line:
-    def __init__(self, color, beg=(0, 0), end=(0, 0)):
+    def __init__(self, beg=(0, 0), end=(0, 0), invisible=False):
         self.beg = beg  # (x, y)
         self.end = end  # (x, y)
-        self.color = color  # (r, g, b, a)
+        self.invisible = invisible
         self.pill_draw = None  # The draw line function from pillow
+        print(self.get_coords()) if not invisible else None
 
     def set_draw_func(self, func):
         self.pill_draw = func
@@ -314,8 +314,25 @@ class Line:
         return self.beg, self.end
 
     def draw(self):
-        print(self.color)
-        self.pill_draw((self.beg, self.end), width=4, fill=self.color)
+        if not self.invisible:
+            self.pill_draw((self.beg, self.end), width=4, fill=(0, 0, 0, 255))
+
+
+# Makes a composite of three lines that together connect
+# parents to a bundle.
+class ComplexLine:
+    def __init__(self, line_space, coords):
+        self.line_space = line_space
+        self.coords = coords
+        self.lines = []
+        self.make()
+
+    def make(self):
+        for coord in self.coords:
+            line = Line(*coord)
+            self.lines.append(line)
+            # Push a line to line_space
+            self.line_space.add_line(line)
 
 
 class ConnectsBundle(Line):
@@ -339,50 +356,84 @@ class ConnectsBundle(Line):
                 else:
                     break
             last_cat = last_litter[-1 - omit]
-            start = (first_cat.x_pos, first_cat.y_pos - 48)
+            start = (first_cat.x_pos - 3, first_cat.y_pos - 48)
             end = (last_cat.x_pos, last_cat.y_pos - 48)
             result = (start, end)
         return result
 
+class MatesLine:
+    def __init__(self, line_space, beg, end):
+        self.line_space = line_space
+        self.beg = beg
+        self.end = end
 
-class ConnectsMates(Line):
-    def __init__(self, cat1, cat2, *args, **kwargs):
+class MatesSolidLine(MatesLine):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parent1 = cat1
-        self.parent2 = cat2
-        self.beg, self.end = self.calculate_line_st_en()
+
+    def make(self):
+        self.line_space.add(Line(self.beg, self.end))
+
+class MatesDashedLine(MatesLine):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.make()
+
+    def generate_coords(self):
+        # Calculate the size of line based on coords.
+        line_len = self.end[0] - self.beg[0] # 30
+        # Calculate the size of one section.
+        sec_len = int((line_len / 4) - 5)
+        # Generate a list of coords.
+        coords = [((self.beg[0] + x * sec_len + x * 5, self.beg[1]),(self.beg[0] + (x + 1) * sec_len + x*5, self.beg[1])) for x in range(4)]
+        # for x in range(4):
+            # coords.append((self.beg[0]))
+        return coords
+
+
+    def make(self):
+        ComplexLine(self.line_space, self.generate_coords())
+
+
+class ConnectsMates:
+    def __init__(self, line_space, bundle):
+        self.line_space = line_space
+        self.bundle = bundle
+        parents = self.bundle[0][0]
+        self.parent1 = parents.dad
+        self.parent2 = parents.mom
+        self.type = ""
+        self.coords = self.calculate_line_st_en()
 
     def calculate_line_st_en(self):
         if self.parent1 == 0 and self.parent2 == 0:
-            result = ((0, 0), (0, 0))
+            result = ((-10, 0), (-10, 0))
         else:
+            if abs(self.parent2.x_pos - self.parent1.x_pos) > 94:
+                self.type = "dotted"
+            else:
+                self.type = "solid"
             direction = family.compare_cat_indexes(self.parent1, self.parent2)
             if direction == "left":
-                start = (self.parent2.x_pos - 32, self.parent2.y_pos)
-                end = (self.parent2.x_pos - 62, self.parent2.y_pos)
+                start = (self.parent2.x_pos - 62, self.parent2.y_pos)
+                end = (self.parent2.x_pos - 33, self.parent2.y_pos)
             else:
-                start = (self.parent1.x_pos - 32, self.parent1.y_pos)
-                end = (self.parent1.x_pos - 62, self.parent1.y_pos)
+                start = (self.parent1.x_pos - 62, self.parent1.y_pos)
+                end = (self.parent1.x_pos - 33, self.parent1.y_pos)
             result = (start, end)
         return result
 
-
-# Makes a composite of three lines that together connect
-# parents to a bundle.
-class ParentsOffspringCn:
-    def __init__(self, line_space, coords):
-        self.line_space = line_space
-        self.coords = coords
-        self.lines = []
-        self.make()
-
     def make(self):
-        for coord in self.coords:
-            line = Line((0, 0, 0, 255), *coord)
-            self.lines.append(line)
-            # Push a line to line_space
-            self.line_space.add_line(line)
+        print(self.type)
+        if self.type == "dotted":
+            MatesDashedLine(self.line_space, *self.coords)
+        else:
+            MatesSolidLine(self.line_space, *self.coords)
 
+        # This has to be returned because the calculating function in
+        # ConnectsAll depends on the properties of this object.
+        # Maybe will change later.
+        return Line(*self.coords, True)
 
 class ConnectsAll:
     def __init__(self, line_space, bundle, bundleindex):
@@ -390,9 +441,11 @@ class ConnectsAll:
         self.index = bundleindex
         self.line_space = line_space
         # Create lines and save their coords
-        self.bundle_coords = line_space.add_line(ConnectsBundle(self.bundle, (0, 0, 0, 255)))
-        self.mate_coords = line_space.add_line(
-            ConnectsMates(self.bundle[0][0].dad, self.bundle[0][0].mom, (0, 0, 0, 255)))
+        self.bundle_coords = self.line_space.add_line(ConnectsBundle(self.bundle))
+        # As ConnectsMates needs LineSpace  to function properly
+        # it has to be instatioated here.
+        mate_line = ConnectsMates(self.line_space, self.bundle)
+        self.mate_coords = line_space.add_line(mate_line.make())
         self.gen_connecting_line()
 
     def calculate_conn_line(self):
@@ -400,22 +453,27 @@ class ConnectsAll:
         mate_line_start, mate_line_end = self.mate_coords
         bundle_line_start, height1 = bundle_horizontal_start
         bundle_line_end, *rest = bundle_horizontal_end
-        bundle_middle = int((bundle_line_start+bundle_line_end) / 2)
+        bundle_middle = int((bundle_line_start + bundle_line_end) / 2) + 1
         mate_start, height2 = mate_line_start
         mate_end, *rest = mate_line_end
-        mate_middle = int((mate_start+mate_end) / 2)
-        heighthorizontal = height1-15*(self.index+1)
-        if heighthorizontal<height2+30:
-            heighthorizontal = height1-15
+        mate_middle = int((mate_start + mate_end) / 2)
+        heighthorizontal = height1 - 15 * (self.index + 1)
+        if heighthorizontal < height2 + 30:
+            heighthorizontal = height1 - 15
         first_vertical_line = ((bundle_middle, height1), (bundle_middle, heighthorizontal))
-        horizontal_line = ((bundle_middle, heighthorizontal), (mate_middle, heighthorizontal))
         second_vertical_line = ((mate_middle, heighthorizontal), (mate_middle, height2))
+        if bundle_middle == mate_middle:
+            horizontal_line = ((bundle_middle, heighthorizontal), (mate_middle, heighthorizontal))
+        elif bundle_middle < mate_middle:
+            horizontal_line = ((bundle_middle - 2, heighthorizontal), (mate_middle + 1, heighthorizontal))
+        else:
+            horizontal_line = ((bundle_middle + 1, heighthorizontal), (mate_middle - 2, heighthorizontal))
         result = (first_vertical_line, horizontal_line, second_vertical_line)
         return result
 
     def gen_connecting_line(self):
         coords = self.calculate_conn_line()
-        connecting_line = ParentsOffspringCn(self.line_space, coords)
+        connecting_line = ComplexLine(self.line_space, coords)
         connecting_line.make()
 
 
@@ -477,7 +535,7 @@ def create_image_cats():
                     base.paste(im=background, box=(start, height))
                     draw = ImageDraw.Draw(base)
                     if cat.ifparent:
-                        draw.line([(start + 32, height - 1), (start + 32, height - 15)], width=4, fill=(0, 0, 0, 255))
+                        draw.line([(start + 31, height - 1), (start + 31, height - 15)], width=4, fill=(0, 0, 0, 255))
                     # else:
                     #     if not (generation == family.generations[0] and litter == generation[0] and litter.index(
                     #             cat) == 0):
