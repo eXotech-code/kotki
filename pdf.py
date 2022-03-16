@@ -15,10 +15,8 @@ def trait_table_pdf(generations):
     img_h, img_w = img.getSize()
     w, h = size
     if check_if_fits(img_h, img_w, h, w) == 1:
-        print("!!!")
         elements.append(Image("smalltree.png"))
     elif check_if_fits(img_w, img_h, h, w) == 1:
-        print("!!")
         im = IMG.open("smalltree.png")
         angle = 90
         out = im.rotate(angle, expand=True)
@@ -54,8 +52,6 @@ def check_if_fits(height, width, ph, pw):
     ph *= 0.75
     pw *= 0.75
     result = 0
-    print(str(height) + "   " + str(width))
-    print(str(ph) + "-----" + str(pw))
     if height <= ph and width <= pw:
         result = 1
     elif height <= pw and width <= ph:
