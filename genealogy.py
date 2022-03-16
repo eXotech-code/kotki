@@ -3,11 +3,12 @@
 from tkinter import *
 from tkinter import messagebox
 from breedingforgui import Breed
-from PIL import Image, ImageTk, ImageDraw
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 from familytreedata import Family, FamilyCat, bundle_litters
 import random
 from resize import resize
-from pdf import create_pdf
+from pdf import trait_table_pdf
+import copy
 
 family = Family()
 litters = []
@@ -159,6 +160,9 @@ def breedcats(breed):
                         family.generations[0][0].append(breed.parent1)
                 else:
                     parent1indexes = family.check_cat_index(breed.parent1)
+                    print(breed.parent1)
+                    print(breed.parent2)
+                    print(parent1indexes)
                     index = family.generations[parent1indexes[0]][parent1indexes[1]].index(breed.parent1)
                     family.generations[parent1indexes[0]][parent1indexes[1]].insert(index + 1, breed.parent2)
             breed.calculate_litter_size()
@@ -203,6 +207,9 @@ def breedcats(breed):
             babycats.image = babies
             babycats.grid()
             litters.append(breed.litter)
+    else:
+        messagebox.showwarning("Warning", "Parents not set")
+
 
 
 def breeding_passdata(frame):
@@ -313,7 +320,6 @@ class Line:
         return self.beg, self.end
 
     def draw(self):
-        print(self.color)
         self.pill_draw((self.beg, self.end), width=4, fill=self.color)
 
 
@@ -325,7 +331,7 @@ class ConnectsBundle(Line):
 
     def calculate_line_st_en(self):
         if self.bundle[0][0].generation == 1:
-            result = ((0, 0), (0, 0))
+            result = ((-10, -10), (-10, -10))
         else:
             first_cat = self.bundle[0][0]
             last_litter = self.bundle[-1]
@@ -354,7 +360,7 @@ class ConnectsMates(Line):
 
     def calculate_line_st_en(self):
         if self.parent1 == 0 and self.parent2 == 0:
-            result = ((-10, 0), (-10, 0))
+            result = ((-10, -10), (-10, -10))
         else:
             if abs(self.parent2.x_pos - self.parent1.x_pos) > 94:
                 self.type = "dotted"
@@ -429,6 +435,7 @@ class ConnectsAll:
 
 
 def create_image_cats():
+    index = 0
     family.bundle()
     size_y = 150 * (len(family.generations))
     lengths = []
@@ -447,7 +454,6 @@ def create_image_cats():
     base = Image.new("RGBA", (size_x, size_y), (255, 255, 200, 255))
     line_space = LineSpace(base)
     height = 10
-    omit = 0
     for generation in family.generations:
         catnumber = (sum([len(x) for x in generation]))
         litternumber = len(generation)
@@ -460,14 +466,11 @@ def create_image_cats():
         start = gaps
         for bundle in generation_bundled:
             for litter in bundle:
-                # lineheight = 0
-                # linestart = 0
                 for cat in litter:
+                    index += 1
+                    cat.id = index
                     cat.x_pos = start + 32
                     cat.y_pos = height + 32
-                    if litter.index(cat) == 0:
-                        linestart = start + 32
-                        lineheight = height - 15
                     if generation == family.generations[-1]:
                         catimg = cat.babyimage
                         position = (19, 23)
@@ -483,31 +486,15 @@ def create_image_cats():
                     else:
                         background = Image.new("RGBA", (64, 64), (180, 210, 240, 255))
                     background.paste(catimg, position, mask=catimg)
+                    drawtext = ImageDraw.Draw(background)
+                    font = ImageFont.truetype("ARIAL.TTF", 10)
+                    drawtext.text((5, 1), str(index), (0, 0, 0), font=font)
                     base.paste(im=background, box=(start, height))
                     draw = ImageDraw.Draw(base)
                     if cat.ifparent:
                         draw.line([(start + 31, height - 1), (start + 31, height - 15)], width=4, fill=(0, 0, 0, 255))
-                    # else:
-                    #     if not (generation == family.generations[0] and litter == generation[0] and litter.index(
-                    #             cat) == 0):
-                    #         draw.line([(start - 26, height + 32), (start - 1, height + 32)], width=4,
-                    #                   fill=(0, 0, 0, 255))
-
                     start += 94
                 start += 15
-                # draw = ImageDraw.Draw(base)
-                # parented = [x.ifparent for x in litter]
-                # parented = parented[::-1]
-                # for x in parented:
-                #     if x:
-                #         break
-                #     else:
-                #         omit += 1
-                # draw.line([(linestart - 2, lineheight), (start - 72 - (90 * omit), lineheight)], width=4,
-                #           fill=(0, 0, 0, 255))
-                # linestart2 = ((linestart - 2) + (start - 72 - (90 * omit))) / 2
-                # draw.line([(linestart2, lineheight - 15), (linestart2, lineheight)], width=4, fill=(0, 0, 0, 255))
-                # omit = 0
             bundleindex = generation_bundled.index(bundle)
             ConnectsAll(line_space, bundle, bundleindex)
             start += 25
@@ -517,19 +504,21 @@ def create_image_cats():
     base = resize(base)
     base.save("tree.png")
     base.show()
-    create_pdf()
+    trait_table_pdf(family.generations)
 
 
 def breedcats_topass(frame):
     breeding_windows = window_space.get_n_windows()
-
     for i in range(len(breeding_windows)):
         if breeding_windows[i].get_frame() == frame:
             breedcats(parentpassed[i])
+            print(parentpassed[i])
 
 
 def breedingnextgen(litter):
-    parentfixed = random.choice(litter.kittens)
+    parented = [x.ifparent for x in litter.kittens]
+    litter_no_mates = [cat for cat in litter.kittens if parented[litter.kittens.index(cat)]]
+    parentfixed = random.choice(litter_no_mates)
     breednext = Breed()
     breednext.set_parent1(parentfixed)
     parent2sex = []
