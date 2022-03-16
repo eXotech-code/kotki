@@ -24,7 +24,7 @@ def trait_table_pdf(generations):
         elements.append(Image("smalltree_rotated.png"))
     else:
         print("unable to add image: tree too large")
-    traits = [["ID", "SEX", "EU", "PH", "DEN", "DMOD", "AG", "TAB", "WH", "TYR", "FL"]]
+    traits = [["ID", "PŁEĆ", "EU", "PH", "DEN", "DMOD", "AG", "TAB", "WH", "TYR", "FL"]]
     for gen in generations:
         for litter in gen:
             for cat in litter:
