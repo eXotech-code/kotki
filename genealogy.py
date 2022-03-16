@@ -492,7 +492,7 @@ def create_image_cats():
     bundlesinbiggestgen = max(secondary_sizing)
     biggestgen += int(bundlesinbiggestgen / 4)
     size_x = 100 * biggestgen
-    base = Image.new("RGBA", (size_x, size_y), (255, 255, 200, 255))
+    base = Image.new("RGBA", (size_x, size_y), (255, 255, 200, 0))
     line_space = LineSpace(base)
     height = 10
     for generation in family.generations:
