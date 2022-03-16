@@ -108,7 +108,7 @@ class Window:
 
 
 window_space = WindowSpace()
-
+breed = Breed()
 var1 = StringVar()
 var2 = StringVar()
 
@@ -119,17 +119,18 @@ potentialparentnew.get_my_colors()
 potentialparentnew.draw_me()
 
 potentialparent1 = FamilyCat(0, 0, 0, 0, 1)
-potentialparent1.make_cat()
+potentialparent1.make_cat_set_sex(["X", "X"])
 potentialparent1.get_phenotype()
 potentialparent1.get_my_colors()
 potentialparent1.draw_me()
+breed.set_parent1(potentialparent1)
 
 potentialparent2 = FamilyCat(0, 0, 0, 0, 1)
-potentialparent2.make_cat()
+potentialparent2.make_cat_set_sex(["X", "Y"])
 potentialparent2.get_phenotype()
 potentialparent2.get_my_colors()
 potentialparent2.draw_me()
-breed = Breed()
+breed.set_parent2(potentialparent2)
 
 pic1 = potentialparent1.resizedimage
 tkpic1 = ImageTk.PhotoImage(pic1)
@@ -215,20 +216,6 @@ def breeding_passdata(frame):
             breedingnextgen(litters[i])
 
 
-# Root window
-def setparent1():
-    breed.set_parent1(potentialparent1)
-
-
-# Breed window
-def setparent2():
-    breed.set_parent2(potentialparent2)
-
-
-def setparentnew(breednext):
-    breednext.set_parent2(potentialparentnew)
-
-
 def newparentnext(breednext, imglbl, txtlbl, parent2sex):
     breednext.remove_parent_2()
     newvar1 = StringVar()
@@ -244,6 +231,7 @@ def newparentnext(breednext, imglbl, txtlbl, parent2sex):
     imglbl.configure(image=newtkpic1)
     imglbl.image = newtkpic1
     txtlbl.configure(textvariable=newvar1)
+    breednext.set_parent2(potentialparentnew)
 
 
 def newparent1():
@@ -251,7 +239,7 @@ def newparent1():
     newvar1 = StringVar()
     global potentialparent1
     potentialparent1 = FamilyCat(0, 0, 0, 0, 1)
-    potentialparent1.make_cat()
+    potentialparent1.make_cat_set_sex(["X", "X"])
     potentialparent1.get_phenotype()
     potentialparent1.get_my_colors()
     potentialparent1.draw_me()
@@ -261,6 +249,7 @@ def newparent1():
     label1.configure(image=newtkpic1)
     label1.image = newtkpic1
     label1a.configure(textvariable=newvar1)
+    breed.set_parent1(potentialparent1)
 
 
 def newparent2():
@@ -268,7 +257,7 @@ def newparent2():
     newvar2 = StringVar()
     global potentialparent2
     potentialparent2 = FamilyCat(0, 0, 0, 0, 1)
-    potentialparent2.make_cat()
+    potentialparent2.make_cat_set_sex(["X", "Y"])
     potentialparent2.get_phenotype()
     potentialparent2.get_my_colors()
     potentialparent2.draw_me()
@@ -278,6 +267,7 @@ def newparent2():
     label2.configure(image=newtkpic2)
     label2.image = newtkpic2
     label2a.configure(textvariable=newvar2)
+    breed.set_parent2(potentialparent2)
 
 
 # LINE CALCULATIONS ----------------------
@@ -465,7 +455,7 @@ class ConnectsAll:
         mate_start, height2 = mate_line_start
         mate_end, *rest = mate_line_end
         mate_middle = int((mate_start + mate_end) / 2)
-        heighthorizontal = height1 - 15 * (self.index + 1)
+        heighthorizontal = height1 - 10 * (self.index + 1)
         if heighthorizontal < height2 + 30:
             heighthorizontal = height1 - 15
         first_vertical_line = ((bundle_middle, height1), (bundle_middle, heighthorizontal))
@@ -602,7 +592,6 @@ def breedingnextgen(litter):
     label2.image = tkpic2
     label2a = Label(new_window, textvariable=var2)
 
-    B2 = Button(new_window, text="set parent", command=lambda: setparentnew(breednext))
     B2a = Button(new_window, text="new", command=lambda: newparentnext(breednext, label2, label2a, parent2sex))
     parentpassed.append(breednext)
     breedbutton = Button(new_window, text="breed",
@@ -615,18 +604,15 @@ def breedingnextgen(litter):
 
     label2.grid(row=0, column=2)
     label2a.grid(row=1, column=2)
-    B2.grid(row=2, column=2)
-    B2a.grid(row=3, column=2)
+    B2a.grid(row=2, column=2)
 
 
 label1 = Label(window_space.get_root_window_obj(), image=tkpic1, bg="pink")
 label1a = Label(window_space.get_root_window_obj(), textvariable=var1)
-B1 = Button(window_space.get_root_window_obj(), text="set parent", command=setparent1)
 B1a = Button(window_space.get_root_window_obj(), text="new", command=newparent1)
 
 label2 = Label(window_space.get_root_window_obj(), image=tkpic2, bg="pink")
 label2a = Label(window_space.get_root_window_obj(), textvariable=var2)
-B2 = Button(window_space.get_root_window_obj(), text="set parent", command=setparent2)
 B2a = Button(window_space.get_root_window_obj(), text="new", command=newparent2)
 
 breedbutton = Button(window_space.get_root_window_obj(), text="breed", command=lambda: breedcats(breed))
@@ -634,15 +620,13 @@ treebutton = Button(window_space.get_root_window_obj(), text="tree", command=lam
 
 label1.grid(row=0)
 label1a.grid(row=1)
-B1.grid(row=2)
-B1a.grid(row=3)
+B1a.grid(row=2)
 
 breedbutton.grid(row=1, column=1)
 treebutton.grid(row=2, column=1)
 
 label2.grid(row=0, column=2)
 label2a.grid(row=1, column=2)
-B2.grid(row=2, column=2)
-B2a.grid(row=3, column=2)
+B2a.grid(row=2, column=2)
 
 window_space.start()
