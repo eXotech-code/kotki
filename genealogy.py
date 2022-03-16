@@ -300,10 +300,12 @@ class LineSpace:
 # Class that respresents one line. It has properties responsible for
 # values that get passed to the Pillow line drawing function.
 class Line:
-    def __init__(self, beg=(0, 0), end=(0, 0)):
+    def __init__(self, beg=(0, 0), end=(0, 0), invisible=False):
         self.beg = beg  # (x, y)
         self.end = end  # (x, y)
+        self.invisible = invisible
         self.pill_draw = None  # The draw line function from pillow
+        print(self.get_coords()) if not invisible else None
 
     def set_draw_func(self, func):
         self.pill_draw = func
@@ -312,7 +314,8 @@ class Line:
         return self.beg, self.end
 
     def draw(self):
-        self.pill_draw((self.beg, self.end), width=4, fill=(0, 0, 0, 255))
+        if not self.invisible:
+            self.pill_draw((self.beg, self.end), width=4, fill=(0, 0, 0, 255))
 
 
 # Makes a composite of three lines that together connect
@@ -326,7 +329,6 @@ class ComplexLine:
 
     def make(self):
         for coord in self.coords:
-            print(*coord)
             line = Line(*coord)
             self.lines.append(line)
             # Push a line to line_space
@@ -360,10 +362,8 @@ class ConnectsBundle(Line):
         return result
 
 class MatesLine:
-    def __init__(self, line_space, bundle, beg, end):
+    def __init__(self, line_space, beg, end):
         self.line_space = line_space
-        self.parent1 = bundle[0][0].dad
-        self.parent2 = bundle[0][0].mom
         self.beg = beg
         self.end = end
 
@@ -377,21 +377,21 @@ class MatesSolidLine(MatesLine):
 class MatesDashedLine(MatesLine):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        print(self.line_space)
         self.make()
 
     def generate_coords(self):
         # Calculate the size of line based on coords.
-        line_len = self.end[0] - self.beg[0]
+        line_len = self.end[0] - self.beg[0] # 30
         # Calculate the size of one section.
         sec_len = int((line_len / 4) - 5)
         # Generate a list of coords.
-        coords = [((self.beg[0]+x*sec_len+x*5, self.beg[1]),(self.beg[0]+(x+1)*sec_len+x*5, self.beg[1])) for x in range(4)]
+        coords = [((self.beg[0] + x * sec_len + x * 5, self.beg[1]),(self.beg[0] + (x + 1) * sec_len + x*5, self.beg[1])) for x in range(4)]
+        # for x in range(4):
+            # coords.append((self.beg[0]))
         return coords
 
 
     def make(self):
-        print(self.generate_coords())
         ComplexLine(self.line_space, self.generate_coords())
 
 
@@ -415,24 +415,25 @@ class ConnectsMates:
                 self.type = "solid"
             direction = family.compare_cat_indexes(self.parent1, self.parent2)
             if direction == "left":
-                start = (self.parent2.x_pos - 33, self.parent2.y_pos)
-                end = (self.parent2.x_pos - 62, self.parent2.y_pos)
+                start = (self.parent2.x_pos - 62, self.parent2.y_pos)
+                end = (self.parent2.x_pos - 33, self.parent2.y_pos)
             else:
-                start = (self.parent1.x_pos - 33, self.parent1.y_pos)
-                end = (self.parent1.x_pos - 62, self.parent1.y_pos)
+                start = (self.parent1.x_pos - 62, self.parent1.y_pos)
+                end = (self.parent1.x_pos - 33, self.parent1.y_pos)
             result = (start, end)
         return result
 
     def make(self):
+        print(self.type)
         if self.type == "dotted":
-            MatesDashedLine(self.line_space, self.bundle, *self.coords)
+            MatesDashedLine(self.line_space, *self.coords)
         else:
-            MatesSolidLine(self.line_space, self.bundle, *self.coords)
+            MatesSolidLine(self.line_space, *self.coords)
 
         # This has to be returned because the calculating function in
         # ConnectsAll depends on the properties of this object.
         # Maybe will change later.
-        return Line(*self.coords)
+        return Line(*self.coords, True)
 
 class ConnectsAll:
     def __init__(self, line_space, bundle, bundleindex):
