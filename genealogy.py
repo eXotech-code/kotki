@@ -160,9 +160,6 @@ def breedcats(breed):
                         family.generations[0][0].append(breed.parent1)
                 else:
                     parent1indexes = family.check_cat_index(breed.parent1)
-                    print(breed.parent1)
-                    print(breed.parent2)
-                    print(parent1indexes)
                     index = family.generations[parent1indexes[0]][parent1indexes[1]].index(breed.parent1)
                     family.generations[parent1indexes[0]][parent1indexes[1]].insert(index + 1, breed.parent2)
             breed.calculate_litter_size()
@@ -413,7 +410,7 @@ class ConnectsMates:
 
     def calculate_line_st_en(self):
         if self.parent1 == 0 and self.parent2 == 0:
-            result = ((-10, -10), (-10, -10))
+            result = ((-10, -10), (-10, -10)) #TODO: Remove this statement during refactor.
         else:
             if abs(self.parent2.x_pos - self.parent1.x_pos) > 94:
                 self.type = "dotted"
@@ -561,7 +558,6 @@ def breedcats_topass(frame):
     for i in range(len(breeding_windows)):
         if breeding_windows[i].get_frame() == frame:
             breedcats(parentpassed[i])
-            print(parentpassed[i])
 
 
 def breedingnextgen(litter):
