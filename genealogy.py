@@ -303,12 +303,10 @@ class LineSpace:
 # Class that represents one line. It has properties responsible for
 # values that get passed to the Pillow line drawing function.
 class Line:
-    def __init__(self, beg=(0, 0), end=(0, 0), invisible=False):
+    def __init__(self, beg=(0, 0), end=(0, 0)):
         self.beg = beg  # (x, y)
         self.end = end  # (x, y)
-        self.invisible = invisible
         self.pill_draw = None  # The draw line function from pillow
-        print(self.get_coords()) if not invisible else None
 
     def set_draw_func(self, func):
         self.pill_draw = func
@@ -317,8 +315,8 @@ class Line:
         return self.beg, self.end
 
     def draw(self):
-        if not self.invisible:
-            self.pill_draw((self.beg, self.end), width=4, fill=(0, 0, 0, 255))
+        # if not self.invisible:
+        self.pill_draw((self.beg, self.end), width=4, fill=(0, 0, 0, 255))
 
 
 # Makes a composite of three lines that together connect
@@ -375,9 +373,10 @@ class MatesLine:
 class MatesSolidLine(MatesLine):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.make()
 
     def make(self):
-        self.line_space.add(Line(self.beg, self.end))
+        self.line_space.add_line(Line(self.beg, self.end))
 
 
 class MatesDashedLine(MatesLine):
@@ -387,15 +386,17 @@ class MatesDashedLine(MatesLine):
 
     def generate_coords(self):
         # Calculate the size of line based on coords.
-        line_len = self.end[0] - self.beg[0]  # 30
-        # Calculate the size of one section.
-        sec_len = int((line_len / 4) - 5)
-        # Generate a list of coords.
-        coords = [
-            ((self.beg[0] + x * sec_len + x * 5, self.beg[1]), (self.beg[0] + (x + 1) * sec_len + x * 5, self.beg[1]))
-            for x in range(4)]
-        # for x in range(4):
-        # coords.append((self.beg[0]))
+        # line_len = self.end[0] - self.beg[0]  # 30
+        # # Calculate the size of one section.
+        # sec_len = int((line_len / 4) - 5)
+        # # Generate a list of coords.
+        # coords = [
+        #     ((self.beg[0] + x * sec_len + x * 5, self.beg[1]), (self.beg[0] + (x + 1) * sec_len + x * 5, self.beg[1]))
+        #     for x in range(5)]
+
+        start = self.beg[0]
+        height = self.beg[1]
+        coords = [((start + x * 8, height), (start + (x + 1) * 5 + x * 3, height)) for x in range(4)]
         return coords
 
     def make(self):
@@ -417,7 +418,7 @@ class ConnectsMates:
             result = ((-10, -10), (-10, -10)) #TODO: Remove this statement during refactor.
         else:
             if abs(self.parent2.x_pos - self.parent1.x_pos) > 94:
-                self.type = "dotted"
+                self.type = "dashed"
             else:
                 self.type = "solid"
             direction = family.compare_cat_indexes(self.parent1, self.parent2)
@@ -431,8 +432,7 @@ class ConnectsMates:
         return result
 
     def make(self):
-        print(self.type)
-        if self.type == "dotted":
+        if self.type == "dashed":
             MatesDashedLine(self.line_space, *self.coords)
         else:
             MatesSolidLine(self.line_space, *self.coords)
@@ -440,7 +440,7 @@ class ConnectsMates:
         # This has to be returned because the calculating function in
         # ConnectsAll depends on the properties of this object.
         # Maybe will change later.
-        return Line(*self.coords, True)
+        return self.coords
 
 
 class ConnectsAll:
@@ -451,9 +451,9 @@ class ConnectsAll:
         # Create lines and save their coords
         self.bundle_coords = self.line_space.add_line(ConnectsBundle(self.bundle))
         # As ConnectsMates needs LineSpace  to function properly
-        # it has to be instatioated here.
+        # it has to be instantiated here.
         mate_line = ConnectsMates(self.line_space, self.bundle)
-        self.mate_coords = line_space.add_line(mate_line.make())
+        self.mate_coords = mate_line.make()
         self.gen_connecting_line()
 
     def calculate_conn_line(self):
@@ -469,7 +469,7 @@ class ConnectsAll:
         if heighthorizontal < height2 + 30:
             heighthorizontal = height1 - 15
         first_vertical_line = ((bundle_middle, height1), (bundle_middle, heighthorizontal))
-        second_vertical_line = ((mate_middle, heighthorizontal), (mate_middle, height2+3))
+        second_vertical_line = ((mate_middle, heighthorizontal), (mate_middle, height2 + 3))
         if bundle_middle == mate_middle:
             horizontal_line = ((bundle_middle, heighthorizontal), (mate_middle, heighthorizontal))
         elif bundle_middle < mate_middle:
