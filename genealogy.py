@@ -211,7 +211,6 @@ def breedcats(breed):
         messagebox.showwarning("Warning", "Parents not set")
 
 
-
 def breeding_passdata(frame):
     windows = window_space.get_l_windows()
     for i in range(len(windows)):
@@ -304,7 +303,7 @@ class LineSpace:
             line.draw()
 
 
-# Class that respresents one line. It has properties responsible for
+# Class that represents one line. It has properties responsible for
 # values that get passed to the Pillow line drawing function.
 class Line:
     def __init__(self, color, beg=(0, 0), end=(0, 0)):
