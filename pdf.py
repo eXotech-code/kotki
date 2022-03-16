@@ -28,7 +28,7 @@ def trait_table_pdf(generations):
     for gen in generations:
         for litter in gen:
             for cat in litter:
-                temp = copy.deepcopy([",".join(x) for x in cat.traits])
+                temp = copy.deepcopy([",".join(sorted(x)) for x in cat.traits])
                 temp.insert(0, cat.id)
                 traits.append(temp)
     doc = SimpleDocTemplate("tree_doc.pdf", pagesize=size)
