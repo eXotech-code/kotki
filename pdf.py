@@ -8,11 +8,12 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 size_w, size_h = A4
-size = (size_w * 2, size_h * 2)
+size = (int(size_w * 1.5), int(size_h * 1.5))
 
 # Fonts
 pdfmetrics.registerFont(TTFont("fontLight", "Roboto-Light.ttf"))
 pdfmetrics.registerFont(TTFont("fontRegular", "Roboto-Regular.ttf"))
+
 
 def trait_table_pdf(generations):
     elements = []
@@ -53,6 +54,7 @@ def trait_table_pdf(generations):
     elements.append(t)
     # write the document to disk
     doc.build(elements)
+
 
 def check_if_fits(height, width, ph, pw):
     ph *= 0.75
