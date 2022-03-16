@@ -367,11 +367,13 @@ class ConnectsBundle(Line):
             result = (start, end)
         return result
 
+
 class MatesLine:
     def __init__(self, line_space, beg, end):
         self.line_space = line_space
         self.beg = beg
         self.end = end
+
 
 class MatesSolidLine(MatesLine):
     def __init__(self, *args, **kwargs):
@@ -380,6 +382,7 @@ class MatesSolidLine(MatesLine):
     def make(self):
         self.line_space.add(Line(self.beg, self.end))
 
+
 class MatesDashedLine(MatesLine):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -387,15 +390,16 @@ class MatesDashedLine(MatesLine):
 
     def generate_coords(self):
         # Calculate the size of line based on coords.
-        line_len = self.end[0] - self.beg[0] # 30
+        line_len = self.end[0] - self.beg[0]  # 30
         # Calculate the size of one section.
         sec_len = int((line_len / 4) - 5)
         # Generate a list of coords.
-        coords = [((self.beg[0] + x * sec_len + x * 5, self.beg[1]),(self.beg[0] + (x + 1) * sec_len + x*5, self.beg[1])) for x in range(4)]
+        coords = [
+            ((self.beg[0] + x * sec_len + x * 5, self.beg[1]), (self.beg[0] + (x + 1) * sec_len + x * 5, self.beg[1]))
+            for x in range(4)]
         # for x in range(4):
-            # coords.append((self.beg[0]))
+        # coords.append((self.beg[0]))
         return coords
-
 
     def make(self):
         ComplexLine(self.line_space, self.generate_coords())
@@ -441,6 +445,7 @@ class ConnectsMates:
         # Maybe will change later.
         return Line(*self.coords, True)
 
+
 class ConnectsAll:
     def __init__(self, line_space, bundle, bundleindex):
         self.bundle = bundle
@@ -467,7 +472,7 @@ class ConnectsAll:
         if heighthorizontal < height2 + 30:
             heighthorizontal = height1 - 15
         first_vertical_line = ((bundle_middle, height1), (bundle_middle, heighthorizontal))
-        second_vertical_line = ((mate_middle, heighthorizontal), (mate_middle, height2))
+        second_vertical_line = ((mate_middle, heighthorizontal), (mate_middle, height2+3))
         if bundle_middle == mate_middle:
             horizontal_line = ((bundle_middle, heighthorizontal), (mate_middle, heighthorizontal))
         elif bundle_middle < mate_middle:
