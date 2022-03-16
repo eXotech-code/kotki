@@ -8,7 +8,7 @@ from familytreedata import Family, FamilyCat, bundle_litters
 import random
 from resize import resize
 from pdf import trait_table_pdf
-import copy
+
 
 family = Family()
 litters = []
@@ -405,7 +405,7 @@ class ConnectsMates:
 
     def calculate_line_st_en(self):
         if self.parent1 == 0 and self.parent2 == 0:
-            result = ((-10, -10), (-10, -10)) #TODO: Remove this statement during refactor.
+            result = ((-10, -10), (-10, -10))  # TODO: Remove this statement during refactor.
         else:
             if abs(self.parent2.x_pos - self.parent1.x_pos) > 94:
                 self.type = "dashed"
