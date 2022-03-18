@@ -2,10 +2,10 @@
 
 # List of supported Linux distros by package managers
 # This is a list of ids as gotten from cat /etc/os-release
-APT="raspbian ubuntu debian kali pop"
-DNF="fedora rhel"
-PACMAN="manjaro archlinux"
-ZYPPER="opensuse"
+APT="Raspbian Ubuntu Debian Kali Pop"
+DNF="Fedora RHEL"
+PACMAN="Manjaro ArchLinux"
+ZYPPER="OpenSUSE"
 
 # Detect if package is already installed.
 check_pac()
@@ -21,77 +21,109 @@ check_pac()
 
 check_distro()
 {
-        DISTRO_ID=cat /etc/os-release
         for DIST in $APT
         do
-            if echo "$DISTRO" | grep "$DIST"; then
-                return APT
+            if lsb_release -id | grep "$DIST"; then
+                echo Ubuntu
+                return 2
             fi
         done
 
         for DIST in $DNF
         do
-            if echo "$DISTRO" | grep "$DIST"; then
-                return DNF
+            if cat /etc/os-release | grep "$DIST"; then
+                return 3
             fi
         done
 
         for DIST in $PACMAN
         do
-            if echo "$DISTRO" | grep "$DIST"; then
-                return PACMAN
+            if cat /etc/os-release | grep "$DIST"; then
+                return 4
             fi
         done
 
         for DIST in $ZYPPER
         do
-            if echo "$DISTRO" | grep "$DIST"; then
-                return ZYPPER
+            if cat /etc/os-release | grep "$DIST"; then
+                return 5
             fi
         done
+}
+
+# Check if package is installed on debian-based systems using dpkg.
+check_pac_debian()
+{
+    PKG=$1
+    STATUS=dpkg-query -W --showformat='${db:Status-Status}' "$PKG" 2>&1
+    if $STATUS | grep not-installed; then
+        return 1
+    else
+        return 0
+    fi
 }
 
 # Detect Linux distro and download Python using a corresponding package manager.
 install_py_lin()
 {
-    if check_pac python; then
+    if { check_pac python || check_pac python3; } && { check_pac pip3 || check_pac pip; }; then
         echo "Python jest juz zainstalowany na tym urzadzeniu. Pomijanie instalacji..."
     else
-        if check_distro = APT; then
+        DISTRO_NUM=check_distro
+        if [[ $DISTRO_NUM == 2 ]]; then
             sudo apt update
             # software-properties-common is needed to add a repository key
-            PKG=software-properties-common
-            STATUS=dpkg-query -W --showformat='${db:Status-Status}' "$PKG" 2>&1
-            if [ ! $? = 0 ] || [ ! $STATUS = installed ]; then
+            if check_pac_debian software-properties-common; then
                 sudo apt install software-properties-common
             fi
             sudo add-apt-repository ppa:deadsnakes/ppa
             sudo apt update
-            sudo install python3.9
-            if [ check_pac python ]; then
-                return 0
-            else
-                return 1
+            sudo apt install -y python3.9
+            if ! check_pac pip3; then
+                sudo apt install python3-pip -y
+                if ! check_pac pip3; then
+                    return 1
+                fi
             fi
-        elif check_distro = DNF; then
-            sudo dnf upgrade
-            sudo dnf install python -y
-        elif check_distro = PACMAN; then
-            sudo pacman -Syu
-            sudo pacman -S python
-        elif check_distro = ZYPPER; then
-            sudo zypper install python
+        elif [[ $DISTRO_NUM == 3 ]]; then
+            sudo dnf -y upgrade
+            sudo -y dnf install python
+        elif [[ $DISTRO_NUM == 4 ]]; then
+            sudo pacman -Syu --noconfirm
+            sudo pacman -S python --noconfirm
+        elif [[ $DISTRO_NUM == 5 ]]; then
+            sudo zypper install python -y
         fi
+    fi
 
-        if [ check_pac python ]; then
-            return 0
-        else
-            return 1
-        fi
+    # I don't know how to check if the package is already installed by the package manager
+    # on other systems, so I only check for it on Ubuntu. People on other OS'es will have a
+    # less optimized installation script.
+    if [[ $DISTRO_NUM == 2 ]]; then
+        sudo apt install -y python3-tk python3-pil python3-pil.imagetk
+    elif [[ $DISTRO_NUM == 3 ]]; then
+        sudo -y dnf install python3-tkinter
+    elif [[ $DISTRO_NUM == 4 ]]; then
+        sudo pacman -S tk python-pillow --noconfirm
+    elif [[ $DISTRO_NUM == 5 ]]; then
+        sudo zypper install python-tk python-Pillow -y
+    fi
+
+    if  check_pac python || check_pac python3; then
+        return 0
+    else
+        return 1
     fi
 }
 
-if echo $OSTYPE | grep linux; then
+if echo $(uname) | grep Darwin; then
+    if brew -v 2>/dev/null; then
+        brew install python3.9
+    else
+        echo "Zainstaluj Homebrew zanim rozpoczniesz instalacje tego programu." >&2
+        exit 1
+    fi
+elif echo $(uname) | grep Linux; then
     if install_py_lin; then
         echo "Instalacja Python 3.9 zakonczona."
     else
@@ -99,20 +131,10 @@ if echo $OSTYPE | grep linux; then
         echo "Prosze zainstalowac interpreter Python 3.9 manualnie." >&2
         exit 1
     fi
-
-    pip install -r required.txt
-
-elif echo $OSTYPE | grep darwin; then
-    if brew -v 2>/dev/null; then
-        brew install python3.9
-    else
-        echo "Zainstaluj Homebrew zanim rozpoczniesz instalacje tego programu." >&2
-        exit 1
-    fi
 else
     echo "Ten system operacyjny nie jest wspierany przez instalator. Zainstaluj interpreter Python i biblioteki manualnie." >&2
     exit 1
 fi
 
-pip install -r required.txt
+pip3 install -r required.txt
 ./genealogy.py
