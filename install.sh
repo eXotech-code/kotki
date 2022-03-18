@@ -2,7 +2,7 @@
 
 # List of supported Linux distros by package managers
 # This is a list of ids as gotten from cat /etc/os-release
-APT="raspbian ubuntu debian kali"
+APT="raspbian ubuntu debian kali pop"
 DNF="fedora rhel"
 PACMAN="manjaro archlinux"
 ZYPPER="opensuse"
@@ -95,22 +95,22 @@ if echo $OSTYPE | grep linux; then
     if install_py_lin; then
         echo "Instalacja Python 3.9 zakonczona."
     else
-        echo "Instalacja interpretera Python z powodow blizej nieokreslonych nie powiodla sie."
-        echo "Prosze zainstalowac interpreter Python 3.9 manualnie."
+        echo "Instalacja interpretera Python z powodow blizej nieokreslonych nie powiodla sie." >&2
+        echo "Prosze zainstalowac interpreter Python 3.9 manualnie." >&2
         exit 1
     fi
 
     pip install -r required.txt
 
 elif echo $OSTYPE | grep darwin; then
-    if ! brew -v | grep not found; then
+    if brew -v 2>/dev/null; then
         brew install python3.9
     else
-        echo "Zainstaluj Homebrew zanim rozpoczniesz instalacje tego programu."
+        echo "Zainstaluj Homebrew zanim rozpoczniesz instalacje tego programu." >&2
         exit 1
     fi
 else
-    echo "Ten system operacyjny nie jest wspierany przez instalator. Zainstaluj interpreter Python i biblioteki manualnie."
+    echo "Ten system operacyjny nie jest wspierany przez instalator. Zainstaluj interpreter Python i biblioteki manualnie." >&2
     exit 1
 fi
 
